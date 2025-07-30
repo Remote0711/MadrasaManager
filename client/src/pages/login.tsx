@@ -11,13 +11,13 @@ import { tr } from "@/lib/tr";
 
 export default function Login() {
   const [, setLocation] = useLocation();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const loginMutation = useMutation({
-    mutationFn: async (credentials: { email: string; password: string }) => {
+    mutationFn: async (credentials: { username: string; password: string }) => {
       const response = await apiRequest("POST", "/api/auth/login", credentials);
       return response.json();
     },
@@ -37,7 +37,7 @@ export default function Login() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
+    if (!username || !password) {
       toast({
         title: tr.error,
         description: tr.fillAllFields,
@@ -45,7 +45,7 @@ export default function Login() {
       });
       return;
     }
-    loginMutation.mutate({ email, password });
+    loginMutation.mutate({ username, password });
   };
 
   return (
@@ -67,17 +67,17 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-4">
               <div>
-                <Label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                  {tr.email}
+                <Label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+                  Kullanıcı Adı
                 </Label>
                 <Input
-                  id="email"
-                  type="email"
+                  id="username"
+                  type="text"
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   className="w-full"
-                  placeholder={tr.emailPlaceholder}
+                  placeholder="Kullanıcı adınızı girin"
                 />
               </div>
               <div>
@@ -108,9 +108,9 @@ export default function Login() {
           <div className="mt-6 text-center text-sm text-gray-600">
             <p>{tr.demoCredentials}</p>
             <div className="mt-2 space-y-1">
-              <p>Admin: admin1@islamiokul.com / 123456</p>
-              <p>Öğretmen: ogretmen1@islamiokul.com / 123456</p>
-              <p>Veli: veli1@islamiokul.com / 123456</p>
+              <p>Admin: admin / 123456</p>
+              <p>Öğretmen: ogretmen / 123456</p>
+              <p>Veli: veli / 123456</p>
             </div>
           </div>
         </CardContent>

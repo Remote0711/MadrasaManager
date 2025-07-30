@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Users, Plus, Edit, Eye, TrendingUp } from "lucide-react";
 import { tr } from "@/lib/tr";
 import type { Student } from "@shared/schema";
+import AddStudentDialog from "@/components/forms/AddStudentDialog";
 
 export default function TeacherStudents() {
   const { data: students, isLoading } = useQuery<Student[]>({
@@ -42,10 +43,7 @@ export default function TeacherStudents() {
               Öğrencilerinizi takip edin ve değerlendirin
             </p>
           </div>
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            İlerleme Ekle
-          </Button>
+          <AddStudentDialog />
         </div>
 
         {/* Students Grid */}

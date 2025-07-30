@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, timestamp, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, boolean, timestamp, date, pgEnum } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -10,7 +10,7 @@ export const attendanceStatusEnum = pgEnum('attendance_status', ['geldi', 'gelme
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
-  email: text("email").notNull().unique(),
+  username: text("username").notNull().unique(),
   password: text("password").notNull(),
   role: roleEnum("role").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -33,6 +33,8 @@ export const students = pgTable("students", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
+  dateOfBirth: date("date_of_birth"),
+  parentId: varchar("parent_id").references(() => users.id),
   classId: varchar("class_id").references(() => classes.id).notNull(),
   enrollmentDate: timestamp("enrollment_date").defaultNow().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),

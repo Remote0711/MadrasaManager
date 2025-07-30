@@ -25,11 +25,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
   app.post('/api/auth/login', async (req, res) => {
     try {
-      const { email, password } = req.body;
-      const user = await authenticateUser(email, password);
+      const { username, password } = req.body;
+      const user = await authenticateUser(username, password);
       
       if (!user) {
-        return res.status(401).json({ message: 'Geçersiz e-posta veya şifre' });
+        return res.status(401).json({ message: 'Geçersiz kullanıcı adı veya şifre' });
       }
 
       req.session.user = user;
@@ -111,12 +111,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/admin/students', async (req, res) => {
     try {
-      requireRole(req.session.user || null, ['ADMIN']);
+      requireRole(req.session.user || null, ['ADMIN', 'TEACHER']);
       const studentData = insertStudentSchema.parse(req.body);
       const student = await storage.createStudent(studentData);
       res.json(student);
     } catch (error) {
       res.status(400).json({ message: (error as Error).message });
+    }
+  });
+
+  app.get('/api/admin/parents', async (req, res) => {
+    try {
+      requireRole(req.session.user || null, ['ADMIN', 'TEACHER']);
+      const parents = await storage.getUsersByRole('PARENT');
+      res.json(parents);
+    } catch (error) {
+      res.status(403).json({ message: (error as Error).message });
     }
   });
 

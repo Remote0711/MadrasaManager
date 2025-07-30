@@ -26,23 +26,23 @@ async function seedDatabase() {
     const hashedPassword = await hashPassword('123456');
     
     const admins = await Promise.all([
-      storage.createUser({ name: 'Ahmet Yılmaz', email: 'admin1@islamiokul.com', password: hashedPassword, role: 'ADMIN' }),
-      storage.createUser({ name: 'Mehmet Özkan', email: 'admin2@islamiokul.com', password: hashedPassword, role: 'ADMIN' })
+      storage.createUser({ name: 'Ahmet Yılmaz', username: 'admin', password: hashedPassword, role: 'ADMIN' }),
+      storage.createUser({ name: 'Mehmet Özkan', username: 'admin2', password: hashedPassword, role: 'ADMIN' })
     ]);
 
     const teachers = await Promise.all([
-      storage.createUser({ name: 'Fatma Özkan', email: 'ogretmen1@islamiokul.com', password: hashedPassword, role: 'TEACHER' }),
-      storage.createUser({ name: 'Ayşe Demir', email: 'ogretmen2@islamiokul.com', password: hashedPassword, role: 'TEACHER' }),
-      storage.createUser({ name: 'Zeynep Kaya', email: 'ogretmen3@islamiokul.com', password: hashedPassword, role: 'TEACHER' })
+      storage.createUser({ name: 'Fatma Özkan', username: 'ogretmen', password: hashedPassword, role: 'TEACHER' }),
+      storage.createUser({ name: 'Ayşe Demir', username: 'ogretmen2', password: hashedPassword, role: 'TEACHER' }),
+      storage.createUser({ name: 'Zeynep Kaya', username: 'ogretmen3', password: hashedPassword, role: 'TEACHER' })
     ]);
 
     const parentUsers = await Promise.all([
-      storage.createUser({ name: 'Emine Yıldız', email: 'veli1@islamiokul.com', password: hashedPassword, role: 'PARENT' }),
-      storage.createUser({ name: 'Hatice Şahin', email: 'veli2@islamiokul.com', password: hashedPassword, role: 'PARENT' }),
-      storage.createUser({ name: 'Meryem Çelik', email: 'veli3@islamiokul.com', password: hashedPassword, role: 'PARENT' }),
-      storage.createUser({ name: 'Khadija Al-Rashid', email: 'veli4@islamiokul.com', password: hashedPassword, role: 'PARENT' }),
-      storage.createUser({ name: 'Aisha Hassan', email: 'veli5@islamiokul.com', password: hashedPassword, role: 'PARENT' }),
-      storage.createUser({ name: 'Zainab Ahmed', email: 'veli6@islamiokul.com', password: hashedPassword, role: 'PARENT' })
+      storage.createUser({ name: 'Emine Yıldız', username: 'veli', password: hashedPassword, role: 'PARENT' }),
+      storage.createUser({ name: 'Hatice Şahin', username: 'veli2', password: hashedPassword, role: 'PARENT' }),
+      storage.createUser({ name: 'Meryem Çelik', username: 'veli3', password: hashedPassword, role: 'PARENT' }),
+      storage.createUser({ name: 'Khadija Al-Rashid', username: 'veli4', password: hashedPassword, role: 'PARENT' }),
+      storage.createUser({ name: 'Aisha Hassan', username: 'veli5', password: hashedPassword, role: 'PARENT' }),
+      storage.createUser({ name: 'Zainab Ahmed', username: 'veli6', password: hashedPassword, role: 'PARENT' })
     ]);
 
     // Öğrencileri oluştur (her sınıfta 10 öğrenci)

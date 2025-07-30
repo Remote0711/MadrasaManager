@@ -1,3 +1,4 @@
+import React, { Suspense, lazy } from "react";
 import { Switch, Route, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -10,6 +11,7 @@ import AdminUsers from "@/pages/dashboard/admin/users";
 import AdminStudents from "@/pages/dashboard/admin/students";
 import AdminClasses from "@/pages/dashboard/admin/classes";
 import AdminLessonPlans from "@/pages/dashboard/admin/lesson-plans";
+import StudentProfile from "@/pages/dashboard/admin/student-profile";
 import TeacherDashboard from "@/pages/dashboard/teacher";
 import TeacherStudents from "@/pages/dashboard/teacher/students";
 import TeacherAttendance from "@/pages/dashboard/teacher/attendance";
@@ -46,6 +48,12 @@ function AppContent() {
       <Route path="/dashboard/admin/users">
         <ProtectedRoute allowedRoles={['ADMIN']} user={auth?.user}>
           <AdminUsers />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/dashboard/admin/students/:id">
+        <ProtectedRoute allowedRoles={['ADMIN']} user={auth?.user}>
+          <StudentProfile />
         </ProtectedRoute>
       </Route>
       

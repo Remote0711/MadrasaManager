@@ -5,7 +5,7 @@ import type { User } from '@shared/schema';
 export interface AuthUser {
   id: string;
   name: string;
-  email: string;
+  username: string;
   role: 'ADMIN' | 'TEACHER' | 'PARENT';
 }
 
@@ -17,8 +17,8 @@ export async function verifyPassword(password: string, hashedPassword: string): 
   return await bcrypt.compare(password, hashedPassword);
 }
 
-export async function authenticateUser(email: string, password: string): Promise<AuthUser | null> {
-  const user = await storage.getUserByEmail(email);
+export async function authenticateUser(username: string, password: string): Promise<AuthUser | null> {
+  const user = await storage.getUserByUsername(username);
   if (!user) {
     return null;
   }
@@ -31,7 +31,7 @@ export async function authenticateUser(email: string, password: string): Promise
   return {
     id: user.id,
     name: user.name,
-    email: user.email,
+    username: user.username,
     role: user.role,
   };
 }

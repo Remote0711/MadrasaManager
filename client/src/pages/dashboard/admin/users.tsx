@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Users, Plus, Edit, Trash2 } from "lucide-react";
 import { tr } from "@/lib/tr";
 import type { User } from "@shared/schema";
+import AddUserDialog from "@/components/forms/AddUserDialog";
 
 export default function AdminUsers() {
   const { data: users, isLoading } = useQuery<User[]>({
@@ -46,10 +47,7 @@ export default function AdminUsers() {
               Sistem kullanıcılarını yönetin
             </p>
           </div>
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            {tr.addNewUser}
-          </Button>
+          <AddUserDialog />
         </div>
 
         {/* Users Table */}
