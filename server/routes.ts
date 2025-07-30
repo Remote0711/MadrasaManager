@@ -114,6 +114,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch('/api/admin/classes/:id', async (req, res) => {
+    try {
+      requireRole(req.session.user || null, ['ADMIN']);
+      const { id } = req.params;
+      const updateData = req.body;
+      const updatedClass = await storage.updateClass(id, updateData);
+      res.json(updatedClass);
+    } catch (error) {
+      res.status(400).json({ message: (error as Error).message });
+    }
+  });
+
   app.get('/api/admin/students', async (req, res) => {
     try {
       requireRole(req.session.user || null, ['ADMIN']);

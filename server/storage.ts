@@ -28,6 +28,7 @@ export interface IStorage {
   getAllClasses(): Promise<Class[]>;
   getClassById(id: string): Promise<Class | undefined>;
   createClass(classData: InsertClass): Promise<Class>;
+  updateClass(id: string, classData: Partial<InsertClass>): Promise<Class>;
 
   // Student operations
   getAllStudents(): Promise<StudentWithClass[]>;
@@ -115,6 +116,11 @@ export class DatabaseStorage implements IStorage {
   async createClass(classData: InsertClass): Promise<Class> {
     const [newClass] = await db.insert(classes).values(classData).returning();
     return newClass;
+  }
+
+  async updateClass(id: string, classData: Partial<InsertClass>): Promise<Class> {
+    const [updatedClass] = await db.update(classes).set(classData).where(eq(classes.id, id)).returning();
+    return updatedClass;
   }
 
   // Student operations
