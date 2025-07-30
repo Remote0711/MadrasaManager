@@ -248,6 +248,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch('/api/teacher/students/:id', async (req, res) => {
+    try {
+      requireRole(req.session.user || null, ['TEACHER', 'ADMIN']);
+      const { id } = req.params;
+      const updateData = insertStudentSchema.partial().parse(req.body);
+      const student = await storage.updateStudent(id, updateData);
+      res.json(student);
+    } catch (error) {
+      res.status(400).json({ message: (error as Error).message });
+    }
+  });
+
   app.post('/api/teacher/behavior', async (req, res) => {
     try {
       requireRole(req.session.user || null, ['TEACHER', 'ADMIN']);

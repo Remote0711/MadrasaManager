@@ -1,17 +1,126 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import TeacherLayout from "@/components/TeacherLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Users, Plus, Edit, Eye, TrendingUp } from "lucide-react";
+import { Users, Edit, Eye, TrendingUp, MoreHorizontal } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { tr } from "@/lib/tr";
-import type { Student } from "@shared/schema";
-import AddStudentDialog from "@/components/forms/AddStudentDialog";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  type StudentWithClass, 
+  type Class,
+  insertStudentSchema,
+  type InsertStudent 
+} from "@shared/schema";
+import { z } from "zod";
+
+const updateStudentSchema = insertStudentSchema.pick({
+  firstName: true,
+  lastName: true,
+  dateOfBirth: true,
+  classId: true,
+});
+
+type UpdateStudentData = z.infer<typeof updateStudentSchema>;
 
 export default function TeacherStudents() {
-  const { data: students, isLoading } = useQuery<Student[]>({
+  const [editingStudent, setEditingStudent] = useState<StudentWithClass | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data: students, isLoading } = useQuery<StudentWithClass[]>({
     queryKey: ['/api/teacher/students'],
   });
+
+  const { data: classes = [] } = useQuery<Class[]>({
+    queryKey: ['/api/admin/classes'],
+  });
+
+  const form = useForm<UpdateStudentData>({
+    resolver: zodResolver(updateStudentSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      dateOfBirth: "",
+      classId: "",
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async (data: UpdateStudentData & { id: string }) => {
+      const response = await apiRequest("PATCH", `/api/teacher/students/${data.id}`, data);
+      if (!response.ok) {
+        throw new Error("Öğrenci güncellenirken hata oluştu");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/teacher/students"] });
+      toast({
+        title: "Başarılı",
+        description: "Öğrenci bilgileri başarıyla güncellendi",
+      });
+      setEditDialogOpen(false);
+      setEditingStudent(null);
+    },
+    onError: (error) => {
+      toast({
+        title: "Hata",
+        description: error.message || "Öğrenci güncellenirken hata oluştu",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleEdit = (student: StudentWithClass) => {
+    setEditingStudent(student);
+    form.reset({
+      firstName: student.firstName,
+      lastName: student.lastName,
+      dateOfBirth: student.dateOfBirth || "",
+      classId: student.classId,
+    });
+    setEditDialogOpen(true);
+  };
+
+  const onSubmit = (data: UpdateStudentData) => {
+    if (!editingStudent) return;
+    updateMutation.mutate({ ...data, id: editingStudent.id });
+  };
 
   if (isLoading) {
     return (
@@ -43,7 +152,9 @@ export default function TeacherStudents() {
               Öğrencilerinizi takip edin ve değerlendirin
             </p>
           </div>
-          <AddStudentDialog />
+          <div className="text-sm text-muted-foreground">
+            Toplam: {students?.length || 0} öğrenci
+          </div>
         </div>
 
         {/* Students Grid */}
@@ -88,9 +199,14 @@ export default function TeacherStudents() {
                         <Eye className="mr-2 h-4 w-4" />
                         Detay
                       </Button>
-                      <Button variant="outline" size="sm" className="flex-1">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => handleEdit(student)}
+                      >
                         <Edit className="mr-2 h-4 w-4" />
-                        İlerleme
+                        Düzenle
                       </Button>
                     </div>
                   </div>
@@ -144,14 +260,24 @@ export default function TeacherStudents() {
                           </Badge>
                         </td>
                         <td className="py-3 px-4 text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button variant="ghost" size="sm">
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm">
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <span className="sr-only">İşlemleri aç</span>
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem>
+                                <Eye className="mr-2 h-4 w-4" />
+                                Detayları Görüntüle
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleEdit(student)}>
+                                <Edit className="mr-2 h-4 w-4" />
+                                Bilgileri Düzenle
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </td>
                       </tr>
                     );
@@ -161,6 +287,103 @@ export default function TeacherStudents() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Edit Student Dialog */}
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Öğrenci Bilgilerini Düzenle</DialogTitle>
+              <DialogDescription>
+                Öğrenci bilgilerini güncelleyin. Sadece gerekli alanları değiştirin.
+              </DialogDescription>
+            </DialogHeader>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="firstName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Ad</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Öğrencinin adı" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="lastName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Soyad</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Öğrencinin soyadı" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <FormField
+                  control={form.control}
+                  name="dateOfBirth"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Doğum Tarihi</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          type="date" 
+                          value={field.value || ''}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="classId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Sınıf</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sınıf seçin" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {classes.map((classItem) => (
+                            <SelectItem key={classItem.id} value={classItem.id}>
+                              {classItem.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex justify-end space-x-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setEditDialogOpen(false)}
+                  >
+                    İptal
+                  </Button>
+                  <Button type="submit" disabled={updateMutation.isPending}>
+                    {updateMutation.isPending ? "Güncelleniyor..." : "Güncelle"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </div>
     </TeacherLayout>
   );
