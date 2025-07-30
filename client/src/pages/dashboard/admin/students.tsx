@@ -1,12 +1,23 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import AdminLayout from "@/components/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { GraduationCap, Plus, Edit, Eye, MoreHorizontal, Trash2 } from "lucide-react";
 import { tr } from "@/lib/tr";
-import type { Student } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import type { Student, Class } from "@shared/schema";
 import AddStudentDialog from "@/components/forms/AddStudentDialog";
 
 interface StudentWithRelations extends Student {
@@ -20,10 +31,126 @@ interface StudentWithRelations extends Student {
   };
 }
 
+const updateStudentSchema = z.object({
+  firstName: z.string().min(1, "Ad gereklidir"),
+  lastName: z.string().min(1, "Soyad gereklidir"),
+  dateOfBirth: z.string().optional(),
+  classId: z.string().min(1, "Sınıf seçilmelidir"),
+});
+
+type UpdateStudentData = z.infer<typeof updateStudentSchema>;
+
 export default function AdminStudents() {
+  const [editingStudent, setEditingStudent] = useState<StudentWithRelations | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [studentToDelete, setStudentToDelete] = useState<StudentWithRelations | null>(null);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   const { data: students, isLoading } = useQuery<StudentWithRelations[]>({
     queryKey: ['/api/admin/students'],
   });
+
+  const { data: classes = [] } = useQuery<Class[]>({
+    queryKey: ['/api/admin/classes'],
+  });
+
+  const form = useForm<UpdateStudentData>({
+    resolver: zodResolver(updateStudentSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      dateOfBirth: "",
+      classId: "",
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async (data: UpdateStudentData & { id: string }) => {
+      const response = await apiRequest("PATCH", `/api/admin/students/${data.id}`, data);
+      if (!response.ok) {
+        throw new Error("Öğrenci güncellenirken hata oluştu");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/students"] });
+      toast({
+        title: "Başarılı",
+        description: "Öğrenci bilgileri başarıyla güncellendi",
+      });
+      setEditDialogOpen(false);
+      setEditingStudent(null);
+      form.reset();
+    },
+    onError: (error) => {
+      toast({
+        title: "Hata",
+        description: error.message || "Öğrenci güncellenirken hata oluştu",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await apiRequest("DELETE", `/api/admin/students/${id}`);
+      if (!response.ok) {
+        throw new Error("Öğrenci silinirken hata oluştu");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/students"] });
+      toast({
+        title: "Başarılı",
+        description: "Öğrenci başarıyla silindi",
+      });
+      setDeleteDialogOpen(false);
+      setStudentToDelete(null);
+    },
+    onError: (error) => {
+      toast({
+        title: "Hata",
+        description: error.message || "Öğrenci silinirken hata oluştu",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleEdit = (student: StudentWithRelations) => {
+    setEditingStudent(student);
+    form.reset({
+      firstName: student.firstName,
+      lastName: student.lastName,
+      dateOfBirth: student.dateOfBirth || "",
+      classId: student.classId,
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleDelete = (student: StudentWithRelations) => {
+    setStudentToDelete(student);
+    setDeleteDialogOpen(true);
+  };
+
+  const onSubmit = (data: UpdateStudentData) => {
+    if (!editingStudent) return;
+    
+    const updateData = {
+      ...data,
+      id: editingStudent.id,
+      dateOfBirth: data.dateOfBirth === "" ? undefined : data.dateOfBirth,
+    };
+    
+    updateMutation.mutate(updateData);
+  };
+
+  const confirmDelete = () => {
+    if (!studentToDelete) return;
+    deleteMutation.mutate(studentToDelete.id);
+  };
 
   if (isLoading) {
     return (
@@ -103,11 +230,14 @@ export default function AdminStudents() {
                               <Eye className="mr-2 h-4 w-4" />
                               Görüntüle
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleEdit(student)}>
                               <Edit className="mr-2 h-4 w-4" />
                               Düzenle
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="text-red-600">
+                            <DropdownMenuItem 
+                              className="text-red-600" 
+                              onClick={() => handleDelete(student)}
+                            >
                               <Trash2 className="mr-2 h-4 w-4" />
                               Sil
                             </DropdownMenuItem>
@@ -121,6 +251,123 @@ export default function AdminStudents() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Edit Student Dialog */}
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Öğrenci Bilgilerini Düzenle</DialogTitle>
+            </DialogHeader>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="firstName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Ad</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="lastName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Soyad</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <FormField
+                  control={form.control}
+                  name="dateOfBirth"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Doğum Tarihi</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="classId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Sınıf</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sınıf seçin" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {classes.map((cls) => (
+                            <SelectItem key={cls.id} value={cls.id}>
+                              {cls.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex justify-end space-x-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setEditDialogOpen(false)}
+                  >
+                    İptal
+                  </Button>
+                  <Button type="submit" disabled={updateMutation.isPending}>
+                    {updateMutation.isPending ? "Güncelleniyor..." : "Güncelle"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Student Dialog */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Öğrenciyi Sil</AlertDialogTitle>
+              <AlertDialogDescription>
+                {studentToDelete && (
+                  <>
+                    <strong>{studentToDelete.firstName} {studentToDelete.lastName}</strong> adlı öğrenciyi silmek istediğinizden emin misiniz? 
+                    Bu işlem geri alınamaz ve öğrenciye ait tüm veriler (devamsızlık, ilerleme kayıtları vb.) silinecektir.
+                  </>
+                )}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>İptal</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmDelete}
+                className="bg-red-600 hover:bg-red-700"
+                disabled={deleteMutation.isPending}
+              >
+                {deleteMutation.isPending ? "Siliniyor..." : "Sil"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AdminLayout>
   );

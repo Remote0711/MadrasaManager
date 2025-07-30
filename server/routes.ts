@@ -135,6 +135,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch('/api/admin/students/:id', async (req, res) => {
+    try {
+      requireRole(req.session.user || null, ['ADMIN', 'TEACHER']);
+      const { id } = req.params;
+      const updateData = insertStudentSchema.partial().parse(req.body);
+      const student = await storage.updateStudent(id, updateData);
+      res.json(student);
+    } catch (error) {
+      res.status(400).json({ message: (error as Error).message });
+    }
+  });
+
+  app.delete('/api/admin/students/:id', async (req, res) => {
+    try {
+      requireRole(req.session.user || null, ['ADMIN']);
+      const { id } = req.params;
+      await storage.deleteStudent(id);
+      res.json({ message: 'Öğrenci başarıyla silindi' });
+    } catch (error) {
+      res.status(400).json({ message: (error as Error).message });
+    }
+  });
+
   app.get('/api/admin/parents', async (req, res) => {
     try {
       requireRole(req.session.user || null, ['ADMIN', 'TEACHER']);

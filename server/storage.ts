@@ -35,6 +35,7 @@ export interface IStorage {
   getStudentsByClassId(classId: string): Promise<StudentWithClass[]>;
   createStudent(student: InsertStudent): Promise<Student>;
   updateStudent(id: string, student: Partial<InsertStudent>): Promise<Student>;
+  deleteStudent(id: string): Promise<void>;
 
   // Parent operations
   getParentByUserId(userId: string): Promise<ParentWithStudent | undefined>;
@@ -175,6 +176,17 @@ export class DatabaseStorage implements IStorage {
   async updateStudent(id: string, student: Partial<InsertStudent>): Promise<Student> {
     const [updatedStudent] = await db.update(students).set(student).where(eq(students.id, id)).returning();
     return updatedStudent;
+  }
+
+  async deleteStudent(id: string): Promise<void> {
+    // Delete related records first to avoid foreign key constraints
+    await db.delete(progress).where(eq(progress.studentId, id));
+    await db.delete(attendance).where(eq(attendance.studentId, id));
+    await db.delete(behavior).where(eq(behavior.studentId, id));
+    await db.delete(parents).where(eq(parents.studentId, id));
+    
+    // Finally delete the student
+    await db.delete(students).where(eq(students.id, id));
   }
 
   // Parent operations
