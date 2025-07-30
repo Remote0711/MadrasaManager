@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import Layout from "@/components/Layout";
+import AdminLayout from "@/components/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Users, GraduationCap, BookOpen, TrendingUp } from "lucide-react";
@@ -19,16 +19,16 @@ export default function AdminDashboard() {
 
   if (isLoading) {
     return (
-      <Layout>
+      <AdminLayout>
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>
-      </Layout>
+      </AdminLayout>
     );
   }
 
   return (
-    <Layout>
+    <AdminLayout>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">
@@ -228,6 +228,6 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
-    </Layout>
+    </AdminLayout>
   );
 }

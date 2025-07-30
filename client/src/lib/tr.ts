@@ -36,6 +36,7 @@ export const tr = {
 
   // Dashboard titles
   adminDashboard: "Yönetici Paneli",
+  adminPanel: "Yönetici Paneli",
   teacherDashboard: "Öğretmen Paneli",
   parentDashboard: "Veli Paneli",
 

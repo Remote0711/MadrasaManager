@@ -6,6 +6,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useQuery } from "@tanstack/react-query";
 import Login from "@/pages/login";
 import AdminDashboard from "@/pages/dashboard/admin";
+import AdminUsers from "@/pages/dashboard/admin/users";
+import AdminStudents from "@/pages/dashboard/admin/students";
+import AdminClasses from "@/pages/dashboard/admin/classes";
+import AdminLessonPlans from "@/pages/dashboard/admin/lesson-plans";
 import TeacherDashboard from "@/pages/dashboard/teacher";
 import ParentDashboard from "@/pages/dashboard/parent";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -34,6 +38,30 @@ function AppContent() {
         {auth?.user ? <Redirect to={`/dashboard/${auth.user.role.toLowerCase()}`} /> : <Login />}
       </Route>
       
+      <Route path="/dashboard/admin/users">
+        <ProtectedRoute allowedRoles={['ADMIN']} user={auth?.user}>
+          <AdminUsers />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/dashboard/admin/students">
+        <ProtectedRoute allowedRoles={['ADMIN']} user={auth?.user}>
+          <AdminStudents />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/dashboard/admin/classes">
+        <ProtectedRoute allowedRoles={['ADMIN']} user={auth?.user}>
+          <AdminClasses />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/dashboard/admin/lesson-plans">
+        <ProtectedRoute allowedRoles={['ADMIN']} user={auth?.user}>
+          <AdminLessonPlans />
+        </ProtectedRoute>
+      </Route>
+
       <Route path="/dashboard/admin">
         <ProtectedRoute allowedRoles={['ADMIN']} user={auth?.user}>
           <AdminDashboard />
