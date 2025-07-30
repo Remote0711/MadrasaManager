@@ -101,9 +101,9 @@ export default function AdminClasses() {
   };
 
   const handleViewStudents = (classItem: ClassWithRelations) => {
-    // Navigate to students page with class filter
+    // Navigate to students page with class filter using window.location to preserve query params
     console.log(`Navigating to students for class: ${classItem.name} (ID: ${classItem.id})`);
-    setLocation(`/dashboard/admin/students?classId=${classItem.id}`);
+    window.location.href = `/dashboard/admin/students?classId=${classItem.id}`;
   };
 
   const onSubmit = (data: UpdateClassData) => {
