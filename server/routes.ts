@@ -318,6 +318,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Subject Progress routes (using existing progress system for now)
+  app.post('/api/teacher/subject-progress', async (req, res) => {
+    try {
+      requireRole(req.session.user || null, ['TEACHER', 'ADMIN']);
+      const { studentId, week, subject, pagesCompleted, quranPageNumber, surahName, ayahNumber } = req.body;
+      
+      // Create progress entry using existing schema
+      let progressNote = `${subject}: `;
+      if (subject === 'temel_bilgiler' && pagesCompleted) {
+        progressNote += `${pagesCompleted} sayfa tamamlandı`;
+      } else if (subject === 'kuran' && quranPageNumber) {
+        progressNote += `Mushaf sayfa ${quranPageNumber}'ye ulaşıldı`;
+      } else if (subject === 'ezber' && surahName) {
+        progressNote += `${surahName} ${ayahNumber ? `ayet ${ayahNumber}` : 'suresi'}`;
+      }
+      
+      const progressEntry = await storage.createProgress({
+        studentId,
+        week,
+        pagesCompleted: pagesCompleted || 0,
+        notes: progressNote
+      });
+      
+      res.json(progressEntry);
+    } catch (error) {
+      console.error('Subject progress error:', error);
+      res.status(400).json({ message: (error as Error).message });
+    }
+  });
+
+  app.post('/api/teacher/evaluation', async (req, res) => {
+    try {
+      requireRole(req.session.user || null, ['TEACHER', 'ADMIN']);
+      const { studentId, week, behaviorType, participation, attention, customNote } = req.body;
+      
+      // Create behavior entry using existing schema
+      const behaviorEntry = await storage.createBehavior({
+        studentId,
+        week,
+        type: behaviorType,
+        notes: `Katılım: ${participation}/10, Dikkat: ${attention}/10. ${customNote || ''}`
+      });
+      
+      res.json(behaviorEntry);
+    } catch (error) {
+      console.error('Evaluation error:', error);
+      res.status(400).json({ message: (error as Error).message });
+    }
+  });
+
+  app.get('/api/teacher/subject-progress/:studentId', async (req, res) => {
+    try {
+      requireRole(req.session.user || null, ['TEACHER', 'ADMIN']);
+      const { studentId } = req.params;
+      const { week } = req.query;
+      
+      const progress = await storage.getProgressByStudent(studentId);
+      const filteredProgress = week ? progress.filter(p => p.week === Number(week)) : progress;
+      res.json(filteredProgress);
+    } catch (error) {
+      res.status(403).json({ message: (error as Error).message });
+    }
+  });
+
   // Stats routes
   app.get('/api/stats/overview', async (req, res) => {
     try {

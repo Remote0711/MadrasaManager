@@ -113,6 +113,54 @@ export const tr = {
   class: "Sınıf",
   program: "Program",
 
+  // Subject-specific tracking
+  subjects: "Dersler",
+  temelBilgiler: "Temel Bilgiler",
+  kuran: "Kur'an",
+  ezber: "Ezber",
+  subjectProgress: "Ders İlerlemeleri",
+  
+  // Temel Bilgiler specific
+  weeklyPlan: "Haftalık Plan",
+  pagesPlannedWeekly: "Planlanan Sayfa",
+  pagesCompletedWeekly: "Tamamlanan Sayfa",
+  completionRate: "Tamamlanma Oranı",
+  enterCompletedPages: "Tamamlanan sayfa sayısını girin",
+  
+  // Kur'an specific
+  quranProgress: "Kur'an İlerlemesi",
+  mushafPage: "Mushaf Sayfası",
+  lastPageReached: "Ulaşılan Son Sayfa",
+  enterQuranPage: "Mushaf sayfa numarasını girin",
+  
+  // Ezber specific
+  ezberProgress: "Ezber İlerlemesi",
+  surah: "Sure",
+  ayah: "Ayet",
+  selectSurah: "Sure Seçin",
+  ayahNumber: "Ayet Numarası",
+  enterAyahNumber: "Ayet numarasını girin (opsiyonel)",
+  
+  // Evaluation specific
+  studentEvaluation: "Öğrenci Değerlendirmesi",
+  behaviorAssessment: "Davranış Değerlendirmesi",
+  participation: "Katılım",
+  attention: "Dikkat",
+  customNote: "Özel Not",
+  behaviorTypes: {
+    cok_dikkatli: "Çok Dikkatli",
+    dikkatli: "Dikkatli", 
+    orta: "Orta",
+    dikkatsiz: "Dikkatsiz",
+    cok_dikkatsiz: "Çok Dikkatsiz"
+  },
+  
+  // Common actions
+  saveSubjectProgress: "Ders İlerlemesini Kaydet",
+  saveEvaluation: "Değerlendirmeyi Kaydet",
+  viewProgress: "İlerlemeyi Görüntüle",
+  updateProgress: "İlerlemeyi Güncelle",
+
   // Forms
   firstName: "Ad",
   lastName: "Soyad",

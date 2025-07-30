@@ -6,6 +6,8 @@ import { z } from "zod";
 
 export const roleEnum = pgEnum('role', ['ADMIN', 'TEACHER', 'PARENT']);
 export const attendanceStatusEnum = pgEnum('attendance_status', ['geldi', 'gelmedi', 'mazeretli']);
+export const subjectTypeEnum = pgEnum('subject_type', ['temel_bilgiler', 'kuran', 'ezber']);
+export const behaviorTypeEnum = pgEnum('behavior_type', ['cok_dikkatli', 'dikkatli', 'orta', 'dikkatsiz', 'cok_dikkatsiz']);
 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -83,6 +85,45 @@ export const behavior = pgTable("behavior", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// New tables for enhanced subject tracking
+export const weeklyLessonPlans = pgTable("weekly_lesson_plans", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  classId: varchar("class_id").references(() => classes.id).notNull(),
+  subject: subjectTypeEnum("subject").notNull(),
+  week: integer("week").notNull(),
+  pagesFrom: integer("pages_from").notNull(),
+  pagesTo: integer("pages_to").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const subjectProgress = pgTable("subject_progress", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  studentId: varchar("student_id").references(() => students.id).notNull(),
+  week: integer("week").notNull(),
+  subject: subjectTypeEnum("subject").notNull(),
+  // For Temel Bilgiler - pages actually taught
+  pagesCompleted: integer("pages_completed"),
+  // For Kur'an - last page reached in Mushaf
+  quranPageNumber: integer("quran_page_number"),
+  // For Ezber - Surah and Ayah
+  surahName: text("surah_name"),
+  ayahNumber: integer("ayah_number"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const studentEvaluations = pgTable("student_evaluations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  studentId: varchar("student_id").references(() => students.id).notNull(),
+  week: integer("week").notNull(),
+  behaviorType: behaviorTypeEnum("behavior_type").notNull(),
+  customNote: text("custom_note"),
+  participation: integer("participation").default(5), // 1-10 scale
+  attention: integer("attention").default(5), // 1-10 scale
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   parents: many(parents),
@@ -110,6 +151,8 @@ export const studentsRelations = relations(students, ({ one, many }) => ({
   progress: many(progress),
   attendance: many(attendance),
   behavior: many(behavior),
+  subjectProgress: many(subjectProgress),
+  evaluations: many(studentEvaluations),
 }));
 
 export const parentsRelations = relations(parents, ({ one }) => ({
@@ -147,6 +190,27 @@ export const attendanceRelations = relations(attendance, ({ one }) => ({
 export const behaviorRelations = relations(behavior, ({ one }) => ({
   student: one(students, {
     fields: [behavior.studentId],
+    references: [students.id],
+  }),
+}));
+
+export const weeklyLessonPlansRelations = relations(weeklyLessonPlans, ({ one }) => ({
+  class: one(classes, {
+    fields: [weeklyLessonPlans.classId],
+    references: [classes.id],
+  }),
+}));
+
+export const subjectProgressRelations = relations(subjectProgress, ({ one }) => ({
+  student: one(students, {
+    fields: [subjectProgress.studentId],
+    references: [students.id],
+  }),
+}));
+
+export const studentEvaluationsRelations = relations(studentEvaluations, ({ one }) => ({
+  student: one(students, {
+    fields: [studentEvaluations.studentId],
     references: [students.id],
   }),
 }));
@@ -194,6 +258,23 @@ export const insertBehaviorSchema = createInsertSchema(behavior).omit({
   createdAt: true,
 });
 
+export const insertWeeklyLessonPlanSchema = createInsertSchema(weeklyLessonPlans).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertSubjectProgressSchema = createInsertSchema(subjectProgress).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertStudentEvaluationSchema = createInsertSchema(studentEvaluations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -213,6 +294,15 @@ export type Attendance = typeof attendance.$inferSelect;
 export type InsertAttendance = z.infer<typeof insertAttendanceSchema>;
 export type Behavior = typeof behavior.$inferSelect;
 export type InsertBehavior = z.infer<typeof insertBehaviorSchema>;
+
+export type WeeklyLessonPlan = typeof weeklyLessonPlans.$inferSelect;
+export type InsertWeeklyLessonPlan = z.infer<typeof insertWeeklyLessonPlanSchema>;
+
+export type SubjectProgress = typeof subjectProgress.$inferSelect;
+export type InsertSubjectProgress = z.infer<typeof insertSubjectProgressSchema>;
+
+export type StudentEvaluation = typeof studentEvaluations.$inferSelect;
+export type InsertStudentEvaluation = z.infer<typeof insertStudentEvaluationSchema>;
 
 // Extended types for UI
 export type StudentWithClass = Student & {

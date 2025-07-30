@@ -3,10 +3,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import TeacherLayout from "@/components/TeacherLayout";
+import SubjectProgressForm from "@/components/SubjectProgressForm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Users, Edit, Eye, TrendingUp, MoreHorizontal } from "lucide-react";
+import { Users, Edit, Eye, TrendingUp, MoreHorizontal, BookOpen, Calendar, CheckCircle, UserCheck, UserX, Clock } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -59,6 +60,8 @@ type UpdateStudentData = z.infer<typeof updateStudentSchema>;
 export default function TeacherStudents() {
   const [editingStudent, setEditingStudent] = useState<StudentWithClass | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [progressStudent, setProgressStudent] = useState<StudentWithClass | null>(null);
+  const [progressDialogOpen, setProgressDialogOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -115,6 +118,17 @@ export default function TeacherStudents() {
       classId: student.classId,
     });
     setEditDialogOpen(true);
+  };
+
+  const openProgressDialog = (student: StudentWithClass) => {
+    setProgressStudent(student);
+    setProgressDialogOpen(true);
+  };
+
+  const getCurrentWeek = () => {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), 0, 1);
+    return Math.ceil(((now.getTime() - start.getTime()) / 86400000 + start.getDay() + 1) / 7);
   };
 
   const onSubmit = (data: UpdateStudentData) => {
@@ -194,19 +208,27 @@ export default function TeacherStudents() {
                       </div>
                     </div>
 
-                    <div className="flex gap-2 pt-4">
-                      <Button variant="outline" size="sm" className="flex-1">
-                        <Eye className="mr-2 h-4 w-4" />
+                    <div className="grid grid-cols-3 gap-2 pt-4">
+                      <Button variant="outline" size="sm">
+                        <Eye className="mr-1 h-3 w-3" />
                         Detay
                       </Button>
                       <Button 
                         variant="outline" 
-                        size="sm" 
-                        className="flex-1"
+                        size="sm"
                         onClick={() => handleEdit(student)}
                       >
-                        <Edit className="mr-2 h-4 w-4" />
+                        <Edit className="mr-1 h-3 w-3" />
                         Düzenle
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => openProgressDialog(student)}
+                        className="bg-blue-50 text-blue-700 hover:bg-blue-100"
+                      >
+                        <BookOpen className="mr-1 h-3 w-3" />
+                        İlerleme
                       </Button>
                     </div>
                   </div>
@@ -275,6 +297,10 @@ export default function TeacherStudents() {
                               <DropdownMenuItem onClick={() => handleEdit(student)}>
                                 <Edit className="mr-2 h-4 w-4" />
                                 Bilgileri Düzenle
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => openProgressDialog(student)}>
+                                <BookOpen className="mr-2 h-4 w-4" />
+                                Ders İlerlemesi
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -382,6 +408,30 @@ export default function TeacherStudents() {
                 </div>
               </form>
             </Form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Subject Progress Dialog */}
+        <Dialog open={progressDialogOpen} onOpenChange={setProgressDialogOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                Ders İlerlemesi Takibi
+              </DialogTitle>
+            </DialogHeader>
+            {progressStudent && (
+              <SubjectProgressForm
+                studentId={progressStudent.id}
+                studentName={`${progressStudent.firstName} ${progressStudent.lastName}`}
+                week={getCurrentWeek()}
+                plannedPages={{ from: 1, to: 10 }} // This would come from lesson plans in real app
+                onSuccess={() => {
+                  setProgressDialogOpen(false);
+                  setProgressStudent(null);
+                  queryClient.invalidateQueries({ queryKey: ["/api/teacher/students"] });
+                }}
+              />
+            )}
           </DialogContent>
         </Dialog>
       </div>
