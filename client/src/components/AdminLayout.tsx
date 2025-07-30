@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { apiRequest } from "@/lib/queryClient";
 import { tr } from "@/lib/tr";
@@ -14,6 +15,7 @@ interface AdminLayoutProps {
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const { data: auth } = useQuery<{ user: AuthUser } | null>({
     queryKey: ['/api/auth/me'],
@@ -42,8 +44,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const { user } = auth;
 
   return (
-    <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
-      <AdminSidebar className="hidden md:block" />
+    <div className={`grid min-h-screen w-full ${sidebarCollapsed ? 'md:grid-cols-[64px_1fr]' : 'md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]'}`}>
+      <AdminSidebar 
+        className="hidden md:block" 
+        isCollapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+      />
       
       <div className="flex flex-col">
         {/* Header */}

@@ -55,6 +55,7 @@ Preferred communication style: Simple, everyday language.
 - **Component Library**: Comprehensive UI component system based on Radix UI
 - **Form Handling**: React Hook Form with Zod validation
 - **Progress Visualization**: Color-coded progress bars and status indicators
+- **Collapsible Sidebar**: Desktop sidebar can be collapsed/expanded for better screen real estate
 
 ## Data Flow
 
