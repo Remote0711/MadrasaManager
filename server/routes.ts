@@ -35,6 +35,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       req.session.user = user;
       res.json({ user });
     } catch (error) {
+      console.error('Login error:', error);
       res.status(500).json({ message: 'Sunucu hatası' });
     }
   });
