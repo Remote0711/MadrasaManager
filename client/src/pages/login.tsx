@@ -25,11 +25,16 @@ export default function Login() {
       queryClient.setQueryData(['/api/auth/me'], data);
       const role = data.user.role.toLowerCase();
       setLocation(`/dashboard/${role}`);
-    },
-    onError: (error) => {
       toast({
-        title: tr.error,
-        description: tr.invalidCredentials,
+        title: "Başarılı",
+        description: "Giriş başarılı!",
+      });
+    },
+    onError: (error: Error) => {
+      console.error("Login error:", error);
+      toast({
+        title: "Hata",
+        description: "Geçersiz kullanıcı adı veya şifre",
         variant: "destructive",
       });
     },
