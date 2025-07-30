@@ -15,6 +15,8 @@ import TeacherStudents from "@/pages/dashboard/teacher/students";
 import TeacherAttendance from "@/pages/dashboard/teacher/attendance";
 import TeacherProgress from "@/pages/dashboard/teacher/progress";
 import ParentDashboard from "@/pages/dashboard/parent";
+import ParentProgress from "@/pages/dashboard/parent/progress";
+import ParentAttendance from "@/pages/dashboard/parent/attendance";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import type { AuthUser } from "@/lib/auth";
 
@@ -95,6 +97,18 @@ function AppContent() {
         </ProtectedRoute>
       </Route>
       
+      <Route path="/dashboard/parent/progress">
+        <ProtectedRoute allowedRoles={['PARENT']} user={auth?.user}>
+          <ParentProgress />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/dashboard/parent/attendance">
+        <ProtectedRoute allowedRoles={['PARENT']} user={auth?.user}>
+          <ParentAttendance />
+        </ProtectedRoute>
+      </Route>
+
       <Route path="/dashboard/parent">
         <ProtectedRoute allowedRoles={['PARENT']} user={auth?.user}>
           <ParentDashboard />

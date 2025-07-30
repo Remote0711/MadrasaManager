@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import Layout from "@/components/Layout";
+import ParentLayout from "@/components/ParentLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import ProgressBar from "@/components/ProgressBar";
@@ -18,22 +18,22 @@ export default function ParentDashboard() {
 
   if (parentLoading || progressLoading) {
     return (
-      <Layout>
+      <ParentLayout>
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>
-      </Layout>
+      </ParentLayout>
     );
   }
 
   if (!parentData) {
     return (
-      <Layout>
+      <ParentLayout>
         <div className="text-center py-12">
           <h2 className="text-xl font-semibold text-gray-900">{tr.childInfoNotFound}</h2>
           <p className="text-gray-600 mt-2">{tr.contactAdmin}</p>
         </div>
-      </Layout>
+      </ParentLayout>
     );
   }
 
@@ -53,7 +53,7 @@ export default function ParentDashboard() {
   };
 
   return (
-    <Layout>
+    <ParentLayout>
       <div className="space-y-6">
         {/* Header */}
         <div>
@@ -217,6 +217,6 @@ export default function ParentDashboard() {
           </CardContent>
         </Card>
       </div>
-    </Layout>
+    </ParentLayout>
   );
 }
