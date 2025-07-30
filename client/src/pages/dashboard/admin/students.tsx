@@ -3,13 +3,25 @@ import AdminLayout from "@/components/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { GraduationCap, Plus, Edit, Eye } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { GraduationCap, Plus, Edit, Eye, MoreHorizontal, Trash2 } from "lucide-react";
 import { tr } from "@/lib/tr";
 import type { Student } from "@shared/schema";
 import AddStudentDialog from "@/components/forms/AddStudentDialog";
 
+interface StudentWithRelations extends Student {
+  class?: {
+    id: string;
+    name: string;
+    programType?: {
+      id: string;
+      name: string;
+    };
+  };
+}
+
 export default function AdminStudents() {
-  const { data: students, isLoading } = useQuery<Student[]>({
+  const { data: students, isLoading } = useQuery<StudentWithRelations[]>({
     queryKey: ['/api/admin/students'],
   });
 
@@ -79,14 +91,28 @@ export default function AdminStudents() {
                         </Badge>
                       </td>
                       <td className="py-3 px-4 text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="sm">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <span className="sr-only">İşlemleri aç</span>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem>
+                              <Eye className="mr-2 h-4 w-4" />
+                              Görüntüle
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Edit className="mr-2 h-4 w-4" />
+                              Düzenle
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-red-600">
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Sil
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </td>
                     </tr>
                   ))}
