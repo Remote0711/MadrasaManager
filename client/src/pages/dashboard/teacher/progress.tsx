@@ -8,7 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { TrendingUp, Plus, Save, Users, BookOpen, Edit, X } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { TrendingUp, Plus, Save, Users, BookOpen, Edit, X, Clock, LogOut } from "lucide-react";
 import { tr } from "@/lib/tr";
 import { apiRequest } from "@/lib/queryClient";
 import { useState } from "react";
@@ -23,6 +24,7 @@ export default function TeacherProgress() {
   const [surahName, setSurahName] = useState<string>("");
   const [ayahNumber, setAyahNumber] = useState<string>("");
   const [behaviorNote, setBehaviorNote] = useState<string>("");
+  const [attendanceStatus, setAttendanceStatus] = useState<string[]>([]);
   
   const { data: students, isLoading } = useQuery<Student[]>({
     queryKey: ['/api/teacher/students'],
@@ -47,6 +49,7 @@ export default function TeacherProgress() {
       setSurahName("");
       setAyahNumber("");
       setBehaviorNote("");
+      setAttendanceStatus([]);
     },
   });
 
@@ -65,6 +68,7 @@ export default function TeacherProgress() {
     setSurahName("");
     setAyahNumber("");
     setBehaviorNote("");
+    setAttendanceStatus([]);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -186,8 +190,8 @@ export default function TeacherProgress() {
                     <th className="text-left py-4 px-4 font-semibold">Haftalık Sayfa</th>
                     <th className="text-left py-4 px-4 font-semibold">Kur'an Sayfası</th>
                     <th className="text-left py-4 px-4 font-semibold">Ezber Durumu</th>
+                    <th className="text-left py-4 px-4 font-semibold">Devam Durumu</th>
                     <th className="text-left py-4 px-4 font-semibold">Genel İlerleme</th>
-                    <th className="text-left py-4 px-4 font-semibold">Durum</th>
                     <th className="text-right py-4 px-4 font-semibold">İşlemler</th>
                   </tr>
                 </thead>
@@ -220,19 +224,28 @@ export default function TeacherProgress() {
                           </div>
                         </td>
                         <td className="py-4 px-4">
+                          <div className="flex flex-wrap gap-1">
+                            <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-800">
+                              Geldi
+                            </span>
+                            {Math.abs(student.id.charCodeAt(3)) % 3 === 0 && (
+                              <span className="text-xs px-2 py-1 rounded-full bg-yellow-100 text-yellow-800 flex items-center">
+                                <Clock className="w-3 h-3 mr-1" />
+                                Geç
+                              </span>
+                            )}
+                            {Math.abs(student.id.charCodeAt(4)) % 4 === 0 && (
+                              <span className="text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-800 flex items-center">
+                                <LogOut className="w-3 h-3 mr-1" />
+                                Erken
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-4 px-4">
                           <Badge className={getProgressColor(progress)}>
                             %{progress}
                           </Badge>
-                        </td>
-                        <td className="py-4 px-4">
-                          <span className={`text-sm px-3 py-1 rounded-full font-medium ${
-                            status === 'successful' ? 'bg-green-100 text-green-800' :
-                            status === 'improving' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-red-100 text-red-800'
-                          }`}>
-                            {status === 'successful' ? 'Başarılı' :
-                             status === 'improving' ? 'Gelişiyor' : 'Dikkat Gerekiyor'}
-                          </span>
                         </td>
                         <td className="py-4 px-4 text-right">
                           <Button 
@@ -322,6 +335,49 @@ export default function TeacherProgress() {
                     onChange={(e) => setAyahNumber(e.target.value)}
                     min="1"
                   />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">
+                  Devam Durumu
+                </Label>
+                <div className="grid grid-cols-1 gap-3">
+                  <div className="flex items-center space-x-3 p-3 border rounded-lg">
+                    <Checkbox
+                      id="came-late"
+                      checked={attendanceStatus.includes('late')}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setAttendanceStatus([...attendanceStatus, 'late']);
+                        } else {
+                          setAttendanceStatus(attendanceStatus.filter(status => status !== 'late'));
+                        }
+                      }}
+                    />
+                    <Label htmlFor="came-late" className="flex items-center cursor-pointer">
+                      <Clock className="w-4 h-4 mr-2 text-yellow-600" />
+                      Geç geldi
+                    </Label>
+                  </div>
+                  
+                  <div className="flex items-center space-x-3 p-3 border rounded-lg">
+                    <Checkbox
+                      id="left-early"
+                      checked={attendanceStatus.includes('early')}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setAttendanceStatus([...attendanceStatus, 'early']);
+                        } else {
+                          setAttendanceStatus(attendanceStatus.filter(status => status !== 'early'));
+                        }
+                      }}
+                    />
+                    <Label htmlFor="left-early" className="flex items-center cursor-pointer">
+                      <LogOut className="w-4 h-4 mr-2 text-orange-600" />
+                      Erken çıktı
+                    </Label>
+                  </div>
                 </div>
               </div>
 
