@@ -136,9 +136,9 @@ async function seedDatabase() {
     console.log(`- ${admins.length + teachers.length + parentUsers.length} kullanıcı oluşturuldu`);
     console.log(`- ${students.length} öğrenci oluşturuldu`);
     console.log('Giriş bilgileri:');
-    console.log('Admin: admin1@islamiokul.com / 123456');
-    console.log('Öğretmen: ogretmen1@islamiokul.com / 123456');
-    console.log('Veli: veli1@islamiokul.com / 123456');
+    console.log('Admin: admin / 123456');
+    console.log('Öğretmen: ogretmen / 123456');
+    console.log('Veli: veli / 123456');
 
   } catch (error) {
     console.error('Seed işlemi sırasında hata:', error);
