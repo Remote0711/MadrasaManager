@@ -79,6 +79,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch('/api/admin/users/:id', async (req, res) => {
+    try {
+      requireRole(req.session.user || null, ['ADMIN']);
+      const { id } = req.params;
+      const updateData = insertUserSchema.omit({ id: true, password: true }).parse(req.body);
+      const updatedUser = await storage.updateUser(id, updateData);
+      res.json(updatedUser);
+    } catch (error) {
+      res.status(400).json({ message: (error as Error).message });
+    }
+  });
+
   app.get('/api/admin/program-types', async (req, res) => {
     try {
       requireRole(req.session.user || null, ['ADMIN']);

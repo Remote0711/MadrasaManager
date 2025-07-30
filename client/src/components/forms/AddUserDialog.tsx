@@ -34,6 +34,8 @@ import { insertUserSchema } from "@shared/schema";
 
 const userFormSchema = insertUserSchema.extend({
   password: z.string().min(6, "Şifre en az 6 karakter olmalıdır"),
+  email: z.string().email("Geçerli bir email adresi giriniz").optional().or(z.literal("")),
+  phone: z.string().optional(),
 });
 
 type UserFormData = z.infer<typeof userFormSchema>;
@@ -49,6 +51,8 @@ export default function AddUserDialog() {
       name: "",
       username: "",
       password: "",
+      email: "",
+      phone: "",
       role: "TEACHER",
     },
   });
@@ -131,6 +135,32 @@ export default function AddUserDialog() {
                   <FormLabel>Şifre</FormLabel>
                   <FormControl>
                     <Input type="password" placeholder="Şifre" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email Adresi (İsteğe bağlı)</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="email@ornek.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Telefon Numarası (İsteğe bağlı)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="+90 555 123 45 67" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

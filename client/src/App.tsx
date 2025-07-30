@@ -7,7 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useQuery } from "@tanstack/react-query";
 import Login from "@/pages/login";
 import AdminDashboard from "@/pages/dashboard/admin";
-import AdminUsers from "@/pages/dashboard/admin/users";
+import UsersPage from "@/pages/dashboard/admin/users";
 import AdminStudents from "@/pages/dashboard/admin/students";
 import AdminClasses from "@/pages/dashboard/admin/classes";
 import AdminLessonPlans from "@/pages/dashboard/admin/lesson-plans";
@@ -47,7 +47,7 @@ function AppContent() {
       
       <Route path="/dashboard/admin/users">
         <ProtectedRoute allowedRoles={['ADMIN']} user={auth?.user}>
-          <AdminUsers />
+          <UsersPage />
         </ProtectedRoute>
       </Route>
       
