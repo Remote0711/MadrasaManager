@@ -6,7 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TrendingUp, Plus, Save, Users, BookOpen } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { TrendingUp, Plus, Save, Users, BookOpen, Edit, X } from "lucide-react";
 import { tr } from "@/lib/tr";
 import { apiRequest } from "@/lib/queryClient";
 import { useState } from "react";
@@ -14,8 +16,12 @@ import type { Student } from "@shared/schema";
 
 export default function TeacherProgress() {
   const queryClient = useQueryClient();
-  const [selectedStudent, setSelectedStudent] = useState<string>("");
-  const [completedPages, setCompletedPages] = useState<string>("");
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [weeklyPages, setWeeklyPages] = useState<string>("");
+  const [quranPage, setQuranPage] = useState<string>("");
+  const [surahName, setSurahName] = useState<string>("");
+  const [ayahNumber, setAyahNumber] = useState<string>("");
   const [behaviorNote, setBehaviorNote] = useState<string>("");
   
   const { data: students, isLoading } = useQuery<Student[]>({
@@ -26,16 +32,23 @@ export default function TeacherProgress() {
     mutationFn: async (data: {
       studentId: string;
       weekNumber: number;
-      completedPages: number;
-      behaviorNote: string;
+      weeklyPages: number;
+      quranPage?: number;
+      surahName?: string;
+      ayahNumber?: number;
+      behaviorNote?: string;
     }) => {
       const response = await apiRequest("POST", "/api/teacher/progress", data);
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/teacher/students'] });
-      setSelectedStudent("");
-      setCompletedPages("");
+      setEditingStudent(null);
+      setEditDialogOpen(false);
+      setWeeklyPages("");
+      setQuranPage("");
+      setSurahName("");
+      setAyahNumber("");
       setBehaviorNote("");
     },
   });
@@ -46,15 +59,29 @@ export default function TeacherProgress() {
     return Math.ceil(((now.getTime() - start.getTime()) / 86400000 + start.getDay() + 1) / 7);
   };
 
+  const handleEdit = (student: Student) => {
+    setEditingStudent(student);
+    setEditDialogOpen(true);
+    // Pre-fill with current data if available
+    setWeeklyPages("");
+    setQuranPage("");
+    setSurahName("");
+    setAyahNumber("");
+    setBehaviorNote("");
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedStudent || !completedPages) return;
+    if (!editingStudent || !weeklyPages) return;
 
     progressMutation.mutate({
-      studentId: selectedStudent,
+      studentId: editingStudent.id,
       weekNumber: getCurrentWeek(),
-      completedPages: parseInt(completedPages),
-      behaviorNote: behaviorNote || "",
+      weeklyPages: parseInt(weeklyPages),
+      quranPage: quranPage ? parseInt(quranPage) : undefined,
+      surahName: surahName || undefined,
+      ayahNumber: ayahNumber ? parseInt(ayahNumber) : undefined,
+      behaviorNote: behaviorNote || undefined,
     });
   };
 
@@ -119,151 +146,55 @@ export default function TeacherProgress() {
     <TeacherLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold">{tr.progress}</h1>
-            <p className="text-muted-foreground">
-              Öğrenci ilerlemelerini kaydedin - Hafta {getCurrentWeek()}
-            </p>
+        <div className="relative">
+          <div className="absolute inset-0 islamic-pattern"></div>
+          <div className="relative bg-gradient-to-r from-primary/5 via-secondary/5 to-primary/5 p-6 rounded-xl border border-primary/10">
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                  {tr.progress}
+                </h1>
+                <p className="text-muted-foreground mt-2 text-lg">
+                  <span className="inline-block w-1 h-4 bg-primary/60 mr-2 rounded"></span>
+                  Öğrenci ilerlemelerini takip edin ve düzenleyin - Hafta {getCurrentWeek()}
+                </p>
+                <p className="text-sm text-muted-foreground arabic-text mt-2">
+                  بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-primary">{students?.length || 0}</div>
+                <div className="text-sm text-muted-foreground">Toplam Öğrenci</div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Progress Input Form */}
-        <Card>
+
+
+        {/* Enhanced Progress Tracking Table */}
+        <Card className="islamic-card">
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <Plus className="mr-2 h-5 w-5" />
-              {tr.weeklyProgressInput}
+            <CardTitle className="flex items-center text-2xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+              <TrendingUp className="mr-3 h-6 w-6 text-primary" />
+              Öğrenci İlerleme Takibi - Hafta {getCurrentWeek()}
             </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">{tr.selectStudent}</label>
-                  <Select value={selectedStudent} onValueChange={setSelectedStudent}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Öğrenci seçin..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {students?.map((student) => (
-                        <SelectItem key={student.id} value={student.id}>
-                          {student.firstName} {student.lastName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">{tr.completedPages}</label>
-                  <Input
-                    type="number"
-                    placeholder="0"
-                    value={completedPages}
-                    onChange={(e) => setCompletedPages(e.target.value)}
-                    min="0"
-                    max="100"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">{tr.behaviorNote}</label>
-                <Textarea
-                  placeholder={tr.behaviorNotePlaceholder}
-                  value={behaviorNote}
-                  onChange={(e) => setBehaviorNote(e.target.value)}
-                  rows={3}
-                />
-              </div>
-
-              <Button 
-                type="submit" 
-                disabled={!selectedStudent || !completedPages || progressMutation.isPending}
-              >
-                <Save className="mr-2 h-4 w-4" />
-                {progressMutation.isPending ? tr.saving : tr.saveProgress}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        {/* Student Progress Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {students?.map((student) => {
-            const progress = mockProgress(student.id);
-            const weeklyPages = mockWeeklyPages(student.id);
-            
-            return (
-              <Card key={student.id} className="hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <Users className="mr-2 h-5 w-5" />
-                      <div>
-                        <div className="text-sm font-medium">{student.firstName} {student.lastName}</div>
-                        <div className="text-xs text-muted-foreground">Öğrenci</div>
-                      </div>
-                    </div>
-                    <Badge className={getProgressColor(progress)}>
-                      %{progress}
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <BookOpen className="mr-2 h-4 w-4" />
-                      Bu hafta: {weeklyPages} sayfa
-                    </div>
-                    
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-primary h-2 rounded-full transition-all duration-300" 
-                        style={{ width: `${progress}%` }}
-                      ></div>
-                    </div>
-
-                    <div className="text-xs text-muted-foreground">
-                      Son güncelleme: {Math.abs(student.id.charCodeAt(0)) % 7 + 1} gün önce
-                    </div>
-
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full"
-                      onClick={() => setSelectedStudent(student.id)}
-                    >
-                      <TrendingUp className="mr-2 h-4 w-4" />
-                      İlerleme Ekle
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-
-        {/* Progress Summary Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <TrendingUp className="mr-2 h-5 w-5" />
-              {tr.studentPerformanceOverview}
-            </CardTitle>
+            <p className="text-muted-foreground mt-2">
+              Öğrencilerinizin haftalık ilerlemelerini takip edin ve düzenleyin
+            </p>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-3 px-4">Öğrenci</th>
-                    <th className="text-left py-3 px-4">Sınıf</th>
-                    <th className="text-left py-3 px-4">Bu Hafta</th>
-                    <th className="text-left py-3 px-4">Genel İlerleme</th>
-                    <th className="text-left py-3 px-4">Durum</th>
-                    <th className="text-right py-3 px-4">Son Güncelleme</th>
+                  <tr className="border-b-2 border-primary/20">
+                    <th className="text-left py-4 px-4 font-semibold">Öğrenci</th>
+                    <th className="text-left py-4 px-4 font-semibold">Haftalık Sayfa</th>
+                    <th className="text-left py-4 px-4 font-semibold">Kur'an Sayfası</th>
+                    <th className="text-left py-4 px-4 font-semibold">Ezber Durumu</th>
+                    <th className="text-left py-4 px-4 font-semibold">Genel İlerleme</th>
+                    <th className="text-left py-4 px-4 font-semibold">Durum</th>
+                    <th className="text-right py-4 px-4 font-semibold">İşlemler</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -273,19 +204,34 @@ export default function TeacherProgress() {
                     const status = mockStatus(student.id);
                     
                     return (
-                      <tr key={student.id} className="border-b hover:bg-muted/50">
-                        <td className="py-3 px-4 font-medium">{student.firstName} {student.lastName}</td>
-                        <td className="py-3 px-4 text-muted-foreground">
-                          Öğrenci
+                      <tr key={student.id} className="border-b hover:bg-primary/5 transition-colors">
+                        <td className="py-4 px-4">
+                          <div className="font-medium text-foreground">
+                            {student.firstName} {student.lastName}
+                          </div>
+                          <div className="text-sm text-muted-foreground">Öğrenci</div>
                         </td>
-                        <td className="py-3 px-4 text-muted-foreground">{weeklyPages} sayfa</td>
-                        <td className="py-3 px-4">
+                        <td className="py-4 px-4">
+                          <div className="font-medium text-primary">{weeklyPages} sayfa</div>
+                          <div className="text-xs text-muted-foreground">Bu hafta</div>
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="font-medium text-secondary">{Math.abs(student.id.charCodeAt(1)) % 604 + 1}</div>
+                          <div className="text-xs text-muted-foreground">Mushaf</div>
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="text-sm">
+                            <div className="font-medium">Fatiha</div>
+                            <div className="text-xs text-muted-foreground">{Math.abs(student.id.charCodeAt(2)) % 7 + 1}. Ayet</div>
+                          </div>
+                        </td>
+                        <td className="py-4 px-4">
                           <Badge className={getProgressColor(progress)}>
                             %{progress}
                           </Badge>
                         </td>
-                        <td className="py-3 px-4">
-                          <span className={`text-sm px-2 py-1 rounded-full ${
+                        <td className="py-4 px-4">
+                          <span className={`text-sm px-3 py-1 rounded-full font-medium ${
                             status === 'successful' ? 'bg-green-100 text-green-800' :
                             status === 'improving' ? 'bg-yellow-100 text-yellow-800' :
                             'bg-red-100 text-red-800'
@@ -294,8 +240,16 @@ export default function TeacherProgress() {
                              status === 'improving' ? 'Gelişiyor' : 'Dikkat Gerekiyor'}
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-right text-muted-foreground">
-                          {Math.abs(student.id.charCodeAt(0)) % 7 + 1} gün önce
+                        <td className="py-4 px-4 text-right">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleEdit(student)}
+                            className="islamic-button-secondary"
+                          >
+                            <Edit className="mr-2 h-4 w-4" />
+                            Düzenle
+                          </Button>
                         </td>
                       </tr>
                     );
@@ -305,6 +259,112 @@ export default function TeacherProgress() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Edit Progress Dialog */}
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent className="sm:max-w-[600px] islamic-card">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                İlerleme Düzenle - {editingStudent?.firstName} {editingStudent?.lastName}
+              </DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="weeklyPages" className="text-sm font-medium">
+                    Haftalık Tamamlanan Sayfa Sayısı *
+                  </Label>
+                  <Input
+                    id="weeklyPages"
+                    type="number"
+                    placeholder="0"
+                    value={weeklyPages}
+                    onChange={(e) => setWeeklyPages(e.target.value)}
+                    min="0"
+                    max="100"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="quranPage" className="text-sm font-medium">
+                    Kur'an Son Sayfa (Mushaf)
+                  </Label>
+                  <Input
+                    id="quranPage"
+                    type="number"
+                    placeholder="1-604"
+                    value={quranPage}
+                    onChange={(e) => setQuranPage(e.target.value)}
+                    min="1"
+                    max="604"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="surahName" className="text-sm font-medium">
+                    Ezber - Surah Adı
+                  </Label>
+                  <Input
+                    id="surahName"
+                    type="text"
+                    placeholder="Örn: Fatiha, Bakara"
+                    value={surahName}
+                    onChange={(e) => setSurahName(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="ayahNumber" className="text-sm font-medium">
+                    Ayet Numarası
+                  </Label>
+                  <Input
+                    id="ayahNumber"
+                    type="number"
+                    placeholder="1"
+                    value={ayahNumber}
+                    onChange={(e) => setAyahNumber(e.target.value)}
+                    min="1"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="behaviorNote" className="text-sm font-medium">
+                  Davranış Notu (Değerlendirme)
+                </Label>
+                <Textarea
+                  id="behaviorNote"
+                  placeholder="Öğrencinin haftalık davranış değerlendirmesi..."
+                  value={behaviorNote}
+                  onChange={(e) => setBehaviorNote(e.target.value)}
+                  rows={3}
+                />
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setEditDialogOpen(false)}
+                >
+                  <X className="mr-2 h-4 w-4" />
+                  İptal
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={!weeklyPages || progressMutation.isPending}
+                  className="islamic-button"
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  {progressMutation.isPending ? 'Kaydediliyor...' : 'Kaydet'}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
     </TeacherLayout>
   );
