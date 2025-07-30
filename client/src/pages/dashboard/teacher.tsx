@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import Layout from "@/components/Layout";
+import TeacherLayout from "@/components/TeacherLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -104,7 +104,7 @@ export default function TeacherDashboard() {
   };
 
   return (
-    <Layout>
+    <TeacherLayout>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">
@@ -278,6 +278,6 @@ export default function TeacherDashboard() {
           </CardContent>
         </Card>
       </div>
-    </Layout>
+    </TeacherLayout>
   );
 }

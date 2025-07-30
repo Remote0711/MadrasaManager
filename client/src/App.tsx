@@ -11,6 +11,9 @@ import AdminStudents from "@/pages/dashboard/admin/students";
 import AdminClasses from "@/pages/dashboard/admin/classes";
 import AdminLessonPlans from "@/pages/dashboard/admin/lesson-plans";
 import TeacherDashboard from "@/pages/dashboard/teacher";
+import TeacherStudents from "@/pages/dashboard/teacher/students";
+import TeacherAttendance from "@/pages/dashboard/teacher/attendance";
+import TeacherProgress from "@/pages/dashboard/teacher/progress";
 import ParentDashboard from "@/pages/dashboard/parent";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import type { AuthUser } from "@/lib/auth";
@@ -68,6 +71,24 @@ function AppContent() {
         </ProtectedRoute>
       </Route>
       
+      <Route path="/dashboard/teacher/students">
+        <ProtectedRoute allowedRoles={['TEACHER']} user={auth?.user}>
+          <TeacherStudents />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/dashboard/teacher/attendance">
+        <ProtectedRoute allowedRoles={['TEACHER']} user={auth?.user}>
+          <TeacherAttendance />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/dashboard/teacher/progress">
+        <ProtectedRoute allowedRoles={['TEACHER']} user={auth?.user}>
+          <TeacherProgress />
+        </ProtectedRoute>
+      </Route>
+
       <Route path="/dashboard/teacher">
         <ProtectedRoute allowedRoles={['TEACHER']} user={auth?.user}>
           <TeacherDashboard />
