@@ -26,34 +26,30 @@ async function seedDatabase() {
     const hashedPassword = await hashPassword('123456');
     
     const admins = await Promise.all([
-      storage.createUser({ name: 'Ahmet Yılmaz', username: 'admin', password: hashedPassword, role: 'ADMIN' }),
-      storage.createUser({ name: 'Mehmet Özkan', username: 'admin2', password: hashedPassword, role: 'ADMIN' })
+      storage.createUser({ name: 'Ahmet Yılmaz', username: 'admin', email: 'admin@example.com', password: hashedPassword, role: 'ADMIN' }),
+      storage.createUser({ name: 'Mehmet Özkan', username: 'admin2', email: 'admin2@example.com', password: hashedPassword, role: 'ADMIN' })
     ]);
 
     const teachers = await Promise.all([
-      storage.createUser({ name: 'Fatma Özkan', username: 'ogretmen', password: hashedPassword, role: 'TEACHER' }),
-      storage.createUser({ name: 'Ayşe Demir', username: 'ogretmen2', password: hashedPassword, role: 'TEACHER' }),
-      storage.createUser({ name: 'Zeynep Kaya', username: 'ogretmen3', password: hashedPassword, role: 'TEACHER' })
+      storage.createUser({ name: 'Fatma Özkan', username: 'ogretmen', email: 'ogretmen@example.com', password: hashedPassword, role: 'TEACHER' }),
+      storage.createUser({ name: 'Ayşe Demir', username: 'ogretmen2', email: 'ogretmen2@example.com', password: hashedPassword, role: 'TEACHER' }),
+      storage.createUser({ name: 'Zeynep Kaya', username: 'ogretmen3', email: 'ogretmen3@example.com', password: hashedPassword, role: 'TEACHER' })
     ]);
 
     const parentUsers = await Promise.all([
-      storage.createUser({ name: 'Emine Yıldız', username: 'veli', password: hashedPassword, role: 'PARENT' }),
-      storage.createUser({ name: 'Hatice Şahin', username: 'veli2', password: hashedPassword, role: 'PARENT' }),
-      storage.createUser({ name: 'Meryem Çelik', username: 'veli3', password: hashedPassword, role: 'PARENT' }),
-      storage.createUser({ name: 'Khadija Al-Rashid', username: 'veli4', password: hashedPassword, role: 'PARENT' }),
-      storage.createUser({ name: 'Aisha Hassan', username: 'veli5', password: hashedPassword, role: 'PARENT' }),
-      storage.createUser({ name: 'Zainab Ahmed', username: 'veli6', password: hashedPassword, role: 'PARENT' })
+      storage.createUser({ name: 'Emine Yıldız', username: 'veli', email: 'veli@example.com', password: hashedPassword, role: 'PARENT' }),
+      storage.createUser({ name: 'Hatice Şahin', username: 'veli2', email: 'veli2@example.com', password: hashedPassword, role: 'PARENT' }),
+      storage.createUser({ name: 'Meryem Çelik', username: 'veli3', email: 'veli3@example.com', password: hashedPassword, role: 'PARENT' })
     ]);
 
-    // Öğrencileri oluştur (her sınıfta 10 öğrenci)
+    // Öğrencileri oluştur (her sınıfta 3 öğrenci - easier to review)
     const studentNames = [
-      'Ahmet Yıldız', 'Ayşe Kaya', 'Mehmet Demir', 'Fatma Şahin', 'Ali Çelik',
-      'Zeynep Özkan', 'Mustafa Arslan', 'Elif Koç', 'Ömer Yılmaz', 'Büşra Aydın'
+      'Ahmet Yıldız', 'Ayşe Kaya', 'Mehmet Demir'
     ];
 
     const students = [];
     for (let classIndex = 0; classIndex < classes.length; classIndex++) {
-      for (let studentIndex = 0; studentIndex < 10; studentIndex++) {
+      for (let studentIndex = 0; studentIndex < 3; studentIndex++) {
         const firstName = studentNames[studentIndex].split(' ')[0];
         const lastName = studentNames[studentIndex].split(' ')[1] + (classIndex + 1);
         

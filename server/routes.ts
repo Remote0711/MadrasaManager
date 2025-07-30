@@ -337,8 +337,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const progressEntry = await storage.createProgress({
         studentId,
         week,
-        pagesCompleted: pagesCompleted || 0,
-        notes: progressNote
+        pagesPlanned: 10, // Default planned pages
+        pagesDone: pagesCompleted || 0
       });
       
       res.json(progressEntry);
@@ -357,8 +357,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const behaviorEntry = await storage.createBehavior({
         studentId,
         week,
-        type: behaviorType,
-        notes: `Katılım: ${participation}/10, Dikkat: ${attention}/10. ${customNote || ''}`
+        comment: `${behaviorType} - Katılım: ${participation}/10, Dikkat: ${attention}/10. ${customNote || ''}`
       });
       
       res.json(behaviorEntry);

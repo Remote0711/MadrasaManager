@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import TeacherLayout from "@/components/TeacherLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,12 +7,15 @@ import { Badge } from "@/components/ui/badge";
 import { CheckSquare, Calendar, Users, Check, X, Clock } from "lucide-react";
 import { tr } from "@/lib/tr";
 import { apiRequest } from "@/lib/queryClient";
-import type { Student } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
+import type { StudentWithClass } from "@shared/schema";
 
 export default function TeacherAttendance() {
+  const [attendanceStatus, setAttendanceStatus] = useState<Record<string, 'present' | 'absent' | 'excused'>>({});
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   
-  const { data: students, isLoading } = useQuery<Student[]>({
+  const { data: students, isLoading } = useQuery<StudentWithClass[]>({
     queryKey: ['/api/teacher/students'],
   });
 
@@ -19,14 +23,24 @@ export default function TeacherAttendance() {
     mutationFn: async (data: { studentId: string; status: 'present' | 'absent' | 'excused' }) => {
       const response = await apiRequest("POST", "/api/teacher/attendance", {
         studentId: data.studentId,
-        weekNumber: getCurrentWeek(),
-        status: data.status,
-        date: new Date().toISOString().split('T')[0]
+        week: getCurrentWeek(),
+        status: data.status
       });
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
+      toast({
+        title: "Başarılı",
+        description: "Devam durumu kaydedildi",
+      });
       queryClient.invalidateQueries({ queryKey: ['/api/teacher/students'] });
+    },
+    onError: () => {
+      toast({
+        title: "Hata", 
+        description: "Devam durumu kaydedilirken hata oluştu",
+        variant: "destructive",
+      });
     },
   });
 
@@ -37,6 +51,13 @@ export default function TeacherAttendance() {
   };
 
   const handleAttendance = (studentId: string, status: 'present' | 'absent' | 'excused') => {
+    // Update local state immediately for UI responsiveness
+    setAttendanceStatus(prev => ({
+      ...prev,
+      [studentId]: status
+    }));
+    
+    // Send to server
     attendanceMutation.mutate({ studentId, status });
   };
 
@@ -98,8 +119,8 @@ export default function TeacherAttendance() {
         {/* Quick Attendance Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {students?.map((student) => {
-            // Mock current attendance status
-            const currentStatus = ['present', 'absent', 'excused'][Math.floor(Math.random() * 3)];
+            // Get current attendance status from local state, default to 'present'
+            const currentStatus = attendanceStatus[student.id] || 'present';
             
             return (
               <Card key={student.id} className="hover:shadow-md transition-shadow">
@@ -108,7 +129,7 @@ export default function TeacherAttendance() {
                     <div className="flex items-center">
                       <Users className="mr-2 h-5 w-5" />
                       <div>
-                        <div className="text-sm font-medium">{student.name}</div>
+                        <div className="text-sm font-medium">{student.firstName} {student.lastName}</div>
                         <div className="text-xs text-muted-foreground">{student.class?.name}</div>
                       </div>
                     </div>
@@ -191,7 +212,7 @@ export default function TeacherAttendance() {
                     
                     return (
                       <tr key={student.id} className="border-b hover:bg-muted/50">
-                        <td className="py-3 px-4 font-medium">{student.name}</td>
+                        <td className="py-3 px-4 font-medium">{student.firstName} {student.lastName}</td>
                         <td className="py-3 px-4 text-muted-foreground">
                           {student.class?.name || 'Atanmamış'}
                         </td>
