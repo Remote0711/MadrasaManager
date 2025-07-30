@@ -63,7 +63,7 @@ export default function AdminStudents() {
                 <tbody>
                   {students?.map((student) => (
                     <tr key={student.id} className="border-b hover:bg-muted/50">
-                      <td className="py-3 px-4 font-medium">{student.name}</td>
+                      <td className="py-3 px-4 font-medium">{student.firstName} {student.lastName}</td>
                       <td className="py-3 px-4 text-muted-foreground">
                         {student.class?.name || 'Atanmamış'}
                       </td>

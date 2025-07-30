@@ -41,7 +41,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Data Models
 - **Users**: Admin, teacher, and parent accounts with role-based permissions
-- **Students**: Student profiles linked to classes and parents
+- **Students**: Student profiles with firstName, lastName, enrollmentDate (kayıt tarihi) linked to classes and parents
 - **Classes**: Class management with program type associations
 - **Program Types**: Three types - Haftasonu (Weekend), Yatılı (Boarding), Yetişkin (Adult)
 - **Lesson Plans**: Weekly curriculum planning with page assignments

@@ -34,6 +34,7 @@ export const students = pgTable("students", {
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
   classId: varchar("class_id").references(() => classes.id).notNull(),
+  enrollmentDate: timestamp("enrollment_date").defaultNow().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -163,6 +164,7 @@ export const insertClassSchema = createInsertSchema(classes).omit({
 export const insertStudentSchema = createInsertSchema(students).omit({
   id: true,
   createdAt: true,
+  enrollmentDate: true,
 });
 
 export const insertParentSchema = createInsertSchema(parents).omit({

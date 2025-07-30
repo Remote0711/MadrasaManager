@@ -59,7 +59,7 @@ export default function TeacherStudents() {
                     <div className="flex items-center">
                       <Users className="mr-2 h-5 w-5" />
                       <div>
-                        <div className="text-sm font-medium">{student.name}</div>
+                        <div className="text-sm font-medium">{student.firstName} {student.lastName}</div>
                         <div className="text-xs text-muted-foreground">{student.class?.name}</div>
                       </div>
                     </div>
@@ -118,8 +118,8 @@ export default function TeacherStudents() {
                     <th className="text-left py-3 px-4">Ad Soyad</th>
                     <th className="text-left py-3 px-4">Sınıf</th>
                     <th className="text-left py-3 px-4">Program</th>
+                    <th className="text-left py-3 px-4">Kayıt Tarihi</th>
                     <th className="text-left py-3 px-4">İlerleme</th>
-                    <th className="text-left py-3 px-4">Son Aktivite</th>
                     <th className="text-right py-3 px-4">İşlemler</th>
                   </tr>
                 </thead>
@@ -128,7 +128,7 @@ export default function TeacherStudents() {
                     const progress = mockProgress(student.id);
                     return (
                       <tr key={student.id} className="border-b hover:bg-muted/50">
-                        <td className="py-3 px-4 font-medium">{student.name}</td>
+                        <td className="py-3 px-4 font-medium">{student.firstName} {student.lastName}</td>
                         <td className="py-3 px-4 text-muted-foreground">
                           {student.class?.name || 'Atanmamış'}
                         </td>
@@ -137,13 +137,13 @@ export default function TeacherStudents() {
                             {student.class?.programType?.name || 'Belirsiz'}
                           </Badge>
                         </td>
+                        <td className="py-3 px-4 text-muted-foreground">
+                          {new Date(student.enrollmentDate).toLocaleDateString('tr-TR')}
+                        </td>
                         <td className="py-3 px-4">
                           <Badge className={getProgressColor(progress)}>
                             %{progress}
                           </Badge>
-                        </td>
-                        <td className="py-3 px-4 text-muted-foreground">
-                          {Math.floor(Math.random() * 7) + 1} gün önce
                         </td>
                         <td className="py-3 px-4 text-right">
                           <div className="flex justify-end gap-2">

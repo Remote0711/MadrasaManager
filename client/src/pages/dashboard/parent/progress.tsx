@@ -65,7 +65,7 @@ export default function ParentProgress() {
           <div>
             <h1 className="text-3xl font-bold">{tr.progress}</h1>
             <p className="text-muted-foreground">
-              {child.name} - {child.class?.name} ({child.class?.programType?.name})
+              {child.firstName} {child.lastName} - {child.class?.name} ({child.class?.programType?.name})
             </p>
           </div>
         </div>
