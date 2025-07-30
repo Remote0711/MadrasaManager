@@ -159,8 +159,17 @@ export default function TeacherStudents() {
     return 'bg-red-100 text-red-800';
   };
 
-  // Mock progress data - in real app this would come from API
-  const mockProgress = (studentId: string) => Math.floor(Math.random() * 100);
+  // Stable mock progress data using student ID as seed - in real app this would come from API
+  const mockProgress = (studentId: string) => {
+    let hash = 0;
+    for (let i = 0; i < studentId.length; i++) {
+      const char = studentId.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash;
+    }
+    const progress = Math.abs(hash) % 100;
+    return Math.max(20, progress);
+  };
 
   return (
     <TeacherLayout>
@@ -219,7 +228,7 @@ export default function TeacherStudents() {
                         <TrendingUp className="mr-2 h-4 w-4 text-primary" />
                         Son hafta
                       </div>
-                      <span className="text-primary font-semibold">{Math.floor(Math.random() * 20)} sayfa</span>
+                      <span className="text-primary font-semibold">{Math.abs(student.id.charCodeAt(0)) % 20 + 1} sayfa</span>
                     </div>
                     
                     <div className="space-y-3">

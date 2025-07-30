@@ -74,8 +74,46 @@ export default function TeacherProgress() {
     return 'bg-red-100 text-red-800';
   };
 
-  // Mock progress data
-  const mockProgress = (studentId: string) => Math.floor(Math.random() * 100);
+  // Stable mock progress data using student ID as seed
+  const mockProgress = (studentId: string) => {
+    // Create a simple hash from studentId to get consistent pseudo-random numbers
+    let hash = 0;
+    for (let i = 0; i < studentId.length; i++) {
+      const char = studentId.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    
+    // Use the hash to generate a consistent progress percentage
+    const progress = Math.abs(hash) % 100;
+    return Math.max(20, progress); // Ensure minimum 20% progress
+  };
+
+  // Stable mock weekly pages using student ID as seed
+  const mockWeeklyPages = (studentId: string) => {
+    let hash = 0;
+    for (let i = 0; i < studentId.length; i++) {
+      const char = studentId.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash;
+    }
+    
+    // Generate consistent weekly pages between 5 and 30
+    return Math.abs(hash) % 26 + 5;
+  };
+
+  // Stable mock status using student ID as seed
+  const mockStatus = (studentId: string) => {
+    let hash = 0;
+    for (let i = 0; i < studentId.length; i++) {
+      const char = studentId.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash;
+    }
+    
+    const statusIndex = Math.abs(hash) % 3;
+    return ['successful', 'improving', 'needs_attention'][statusIndex];
+  };
 
   return (
     <TeacherLayout>
@@ -155,7 +193,7 @@ export default function TeacherProgress() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {students?.map((student) => {
             const progress = mockProgress(student.id);
-            const weeklyPages = Math.floor(Math.random() * 25) + 5;
+            const weeklyPages = mockWeeklyPages(student.id);
             
             return (
               <Card key={student.id} className="hover:shadow-md transition-shadow">
@@ -188,7 +226,7 @@ export default function TeacherProgress() {
                     </div>
 
                     <div className="text-xs text-muted-foreground">
-                      Son güncelleme: {Math.floor(Math.random() * 7) + 1} gün önce
+                      Son güncelleme: {Math.abs(student.id.charCodeAt(0)) % 7 + 1} gün önce
                     </div>
 
                     <Button 
@@ -231,8 +269,8 @@ export default function TeacherProgress() {
                 <tbody>
                   {students?.map((student) => {
                     const progress = mockProgress(student.id);
-                    const weeklyPages = Math.floor(Math.random() * 25) + 5;
-                    const status = progress >= 70 ? 'successful' : progress >= 50 ? 'improving' : 'needsAttention';
+                    const weeklyPages = mockWeeklyPages(student.id);
+                    const status = mockStatus(student.id);
                     
                     return (
                       <tr key={student.id} className="border-b hover:bg-muted/50">
@@ -257,7 +295,7 @@ export default function TeacherProgress() {
                           </span>
                         </td>
                         <td className="py-3 px-4 text-right text-muted-foreground">
-                          {Math.floor(Math.random() * 7) + 1} gün önce
+                          {Math.abs(student.id.charCodeAt(0)) % 7 + 1} gün önce
                         </td>
                       </tr>
                     );
