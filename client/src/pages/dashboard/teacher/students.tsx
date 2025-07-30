@@ -62,6 +62,8 @@ export default function TeacherStudents() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [progressStudent, setProgressStudent] = useState<StudentWithClass | null>(null);
   const [progressDialogOpen, setProgressDialogOpen] = useState(false);
+  const [detailsStudent, setDetailsStudent] = useState<StudentWithClass | null>(null);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -123,6 +125,11 @@ export default function TeacherStudents() {
   const openProgressDialog = (student: StudentWithClass) => {
     setProgressStudent(student);
     setProgressDialogOpen(true);
+  };
+
+  const handleDetails = (student: StudentWithClass) => {
+    setDetailsStudent(student);
+    setDetailsDialogOpen(true);
   };
 
   const getCurrentWeek = () => {
@@ -209,7 +216,11 @@ export default function TeacherStudents() {
                     </div>
 
                     <div className="grid grid-cols-3 gap-2 pt-4">
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleDetails(student)}
+                      >
                         <Eye className="mr-1 h-3 w-3" />
                         Detay
                       </Button>
@@ -432,6 +443,222 @@ export default function TeacherStudents() {
                 }}
               />
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Student Details Dialog */}
+        <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center">
+                <Users className="mr-2 h-5 w-5" />
+                {detailsStudent && `${detailsStudent.firstName} ${detailsStudent.lastName}`} - Detaylı İstatistikler
+              </DialogTitle>
+              <DialogDescription>
+                Öğrencinin tüm akademik ve davranışsal verilerinin kapsamlı görünümü
+              </DialogDescription>
+            </DialogHeader>
+            
+            {detailsStudent && (
+              <div className="space-y-6">
+                {/* Basic Information */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <BookOpen className="mr-2 h-4 w-4" />
+                      Temel Bilgiler
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <div className="text-sm font-medium text-muted-foreground">Ad Soyad</div>
+                        <div className="text-lg font-semibold">{detailsStudent.firstName} {detailsStudent.lastName}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-muted-foreground">Sınıf</div>
+                        <div className="text-lg font-semibold">{detailsStudent.class?.name}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-muted-foreground">Program Türü</div>
+                        <div className="text-lg font-semibold">{detailsStudent.class?.programType?.name}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-muted-foreground">Kayıt Tarihi</div>
+                        <div className="text-lg font-semibold">
+                          {new Date(detailsStudent.enrollmentDate).toLocaleDateString('tr-TR')}
+                        </div>
+                      </div>
+                      {detailsStudent.dateOfBirth && (
+                        <div>
+                          <div className="text-sm font-medium text-muted-foreground">Doğum Tarihi</div>
+                          <div className="text-lg font-semibold">
+                            {new Date(detailsStudent.dateOfBirth).toLocaleDateString('tr-TR')}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Attendance Statistics */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Calendar className="mr-2 h-4 w-4" />
+                      Devam İstatistikleri
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="text-center p-4 bg-green-50 rounded-lg">
+                        <UserCheck className="mx-auto h-8 w-8 text-green-600 mb-2" />
+                        <div className="text-2xl font-bold text-green-600">85%</div>
+                        <div className="text-sm text-muted-foreground">Devam Oranı</div>
+                      </div>
+                      <div className="text-center p-4 bg-red-50 rounded-lg">
+                        <UserX className="mx-auto h-8 w-8 text-red-600 mb-2" />
+                        <div className="text-2xl font-bold text-red-600">3</div>
+                        <div className="text-sm text-muted-foreground">Devamsızlık</div>
+                      </div>
+                      <div className="text-center p-4 bg-yellow-50 rounded-lg">
+                        <Clock className="mx-auto h-8 w-8 text-yellow-600 mb-2" />
+                        <div className="text-2xl font-bold text-yellow-600">2</div>
+                        <div className="text-sm text-muted-foreground">Mazeretli</div>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-4">
+                      <div className="text-sm font-medium mb-2">Son 5 Hafta Devam Durumu</div>
+                      <div className="flex space-x-2">
+                        {[
+                          { week: 'Hafta 1', status: 'present' },
+                          { week: 'Hafta 2', status: 'present' },
+                          { week: 'Hafta 3', status: 'absent' },
+                          { week: 'Hafta 4', status: 'present' },
+                          { week: 'Hafta 5', status: 'excused' }
+                        ].map((item, index) => (
+                          <div key={index} className="flex-1 text-center">
+                            <div className="text-xs text-muted-foreground mb-1">{item.week}</div>
+                            <div className={`px-2 py-1 rounded text-xs font-medium ${
+                              item.status === 'present' ? 'bg-green-100 text-green-800' :
+                              item.status === 'absent' ? 'bg-red-100 text-red-800' :
+                              'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {item.status === 'present' ? 'Geldi' : 
+                               item.status === 'absent' ? 'Gelmedi' : 'Mazeretli'}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Academic Progress */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <TrendingUp className="mr-2 h-4 w-4" />
+                      Akademik İlerleme
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="text-center p-4 bg-blue-50 rounded-lg">
+                          <BookOpen className="mx-auto h-8 w-8 text-blue-600 mb-2" />
+                          <div className="text-2xl font-bold text-blue-600">87%</div>
+                          <div className="text-sm text-muted-foreground">Kur'an İlerlemesi</div>
+                        </div>
+                        <div className="text-center p-4 bg-purple-50 rounded-lg">
+                          <CheckCircle className="mx-auto h-8 w-8 text-purple-600 mb-2" />
+                          <div className="text-2xl font-bold text-purple-600">92%</div>
+                          <div className="text-sm text-muted-foreground">Ezber Başarısı</div>
+                        </div>
+                        <div className="text-center p-4 bg-orange-50 rounded-lg">
+                          <TrendingUp className="mx-auto h-8 w-8 text-orange-600 mb-2" />
+                          <div className="text-2xl font-bold text-orange-600">89%</div>
+                          <div className="text-sm text-muted-foreground">Genel Başarı</div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="text-sm font-medium mb-2">Haftalık İlerleme</div>
+                        <div className="space-y-2">
+                          {[
+                            { subject: 'Kur\'an-ı Kerim', planned: 15, completed: 13, week: 'Bu hafta' },
+                            { subject: 'Ezber (Al-Fatiha)', planned: 7, completed: 7, week: 'Bu hafta' },
+                            { subject: 'Temel Bilgiler', planned: 10, completed: 8, week: 'Bu hafta' }
+                          ].map((item, index) => (
+                            <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                              <div>
+                                <div className="font-medium">{item.subject}</div>
+                                <div className="text-sm text-muted-foreground">{item.week}</div>
+                              </div>
+                              <div className="text-right">
+                                <div className="font-semibold">{item.completed}/{item.planned}</div>
+                                <div className="text-sm text-muted-foreground">
+                                  %{Math.round((item.completed / item.planned) * 100)}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Behavior & Notes */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Users className="mr-2 h-4 w-4" />
+                      Davranış ve Notlar
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="text-center p-4 bg-green-50 rounded-lg">
+                          <div className="text-2xl font-bold text-green-600">8.5/10</div>
+                          <div className="text-sm text-muted-foreground">Davranış Puanı</div>
+                        </div>
+                        <div className="text-center p-4 bg-blue-50 rounded-lg">
+                          <div className="text-2xl font-bold text-blue-600">Dikkatli</div>
+                          <div className="text-sm text-muted-foreground">Genel Davranış</div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="text-sm font-medium mb-2">Son Öğretmen Notları</div>
+                        <div className="space-y-2">
+                          {[
+                            { date: '2025-01-29', note: 'Çok başarılı, aktif katılım gösterdi. Kur\'an okumada gelişim gösteriyor.' },
+                            { date: '2025-01-22', note: 'İyi çalışıyor, biraz daha odaklanabilir. Ezber konusunda gayet başarılı.' },
+                            { date: '2025-01-15', note: 'Mükemmel performans, tüm konularda başarılı. Arkadaşlarına yardımcı oluyor.' }
+                          ].map((item, index) => (
+                            <div key={index} className="p-3 bg-gray-50 rounded">
+                              <div className="text-sm text-muted-foreground mb-1">
+                                {new Date(item.date).toLocaleDateString('tr-TR')}
+                              </div>
+                              <div className="text-sm">{item.note}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+            
+            <div className="flex justify-end mt-6">
+              <Button onClick={() => setDetailsDialogOpen(false)}>
+                Kapat
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
       </div>

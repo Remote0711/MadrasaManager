@@ -1,0 +1,15 @@
+You are working on an existing web application built with React (frontend), Express (backend), and Prisma with PostgreSQL (database). This app is used in a Turkish weekend Islamic school. Do not create a new project. Instead, improve and extend the existing app by implementing the following enhancements. Be careful not to break or overwrite existing functions or components.
+
+For the subject "Temel Bilgiler", each class should have a fixed weekly lesson plan created by the admin. The plan consists of page ranges (for example: from page 10 to page 15). Teachers must enter how many pages were actually taught each week. The system should automatically calculate the percentage of completion and visualize it (e.g. 11 out of 15 pages = 73%).
+
+For "Kur’an", teachers should be able to enter the last page number each student reached in the Mushaf. This data must be stored per student and week, so that the teacher can continue from the correct point in the next session.
+
+For "Ezber" (memorization), teachers must be able to select the Surah and optionally the Ayah number the student is currently memorizing. This should be implemented as a dropdown for the Surah and a text field or number input for the Ayah. This information should be stored per student and week. Optionally, save the date of update.
+
+Add a student evaluation field where the teacher can write or select behavioral feedback per week (e.g. “very attentive”, “low participation”, “excellent”). This will be used later for generating AI-assisted report cards.
+
+Do not remove or replace existing components. All new input fields must be added to the existing teacher dashboard where students are already listed. The user interface is in Turkish and must remain Turkish. All labels and messages should be integrated using the i18n structure that already exists.
+
+If necessary, extend the Prisma schema by adding new tables or fields such as QuranProgress, MemorizationProgress, WeeklyLessonPlan, or StudentEvaluation. Link all data properly with student IDs, class IDs, and week numbers. Seed sample data if needed to test the structure.
+
+Make sure teachers can enter all required information easily and that progress per subject can be reviewed later for statistics and evaluation. Keep the code modular and clean. The goal is to improve tracking and make report generation easier in the future.
