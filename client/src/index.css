@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Inter:wght@100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Inter:wght@300;400;500;600;700&family=Tajawal:wght@200;300;400;500;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -58,7 +58,11 @@
 
   body {
     @apply antialiased bg-background text-foreground;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: 'Tajawal', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-image: 
+      radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.03) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(255, 177, 153, 0.03) 0%, transparent 50%),
+      radial-gradient(circle at 40% 40%, rgba(120, 119, 198, 0.02) 0%, transparent 50%);
   }
 
   /* Arabic/Islamic text styling */
@@ -71,10 +75,38 @@
   /* Islamic decorative elements */
   .islamic-pattern {
     background-image: 
-      radial-gradient(circle at 25% 25%, hsl(171, 100%, 30%) 2px, transparent 2px),
-      radial-gradient(circle at 75% 75%, hsl(39, 77%, 70%) 1px, transparent 1px);
-    background-size: 30px 30px;
-    opacity: 0.05;
+      linear-gradient(45deg, transparent 30%, hsl(171, 100%, 30%) 30%, hsl(171, 100%, 30%) 31%, transparent 31%),
+      linear-gradient(-45deg, transparent 30%, hsl(39, 77%, 70%) 30%, hsl(39, 77%, 70%) 31%, transparent 31%);
+    background-size: 60px 60px;
+    opacity: 0.03;
+  }
+
+  .islamic-ornament {
+    position: relative;
+  }
+
+  .islamic-ornament::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, hsl(171, 100%, 30%), transparent);
+    border-radius: 2px;
+  }
+
+  .islamic-ornament::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, hsl(171, 100%, 30%), transparent);
+    border-radius: 2px;
   }
 
   /* Subtle geometric border pattern */
@@ -89,26 +121,75 @@
 
   /* Enhanced card styling with Islamic touch */
   .islamic-card {
-    background: linear-gradient(135deg, 
+    background: linear-gradient(145deg, 
       hsl(0, 0%, 100%) 0%, 
-      hsl(48, 50%, 99%) 100%
+      hsl(48, 30%, 98%) 50%,
+      hsl(0, 0%, 100%) 100%
     );
     border: 1px solid hsl(39, 30%, 88%);
     box-shadow: 
-      0 4px 6px -1px rgb(0 0 0 / 0.05),
-      0 2px 4px -2px rgb(0 0 0 / 0.05),
+      0 8px 25px -5px rgb(0 0 0 / 0.08),
+      0 3px 10px -3px rgb(0 0 0 / 0.05),
       inset 0 1px 0 hsl(48, 100%, 99%);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .islamic-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, 
+      hsl(171, 100%, 30%) 0%, 
+      hsl(39, 77%, 70%) 50%, 
+      hsl(171, 100%, 30%) 100%
+    );
   }
 
   .dark .islamic-card {
-    background: linear-gradient(135deg, 
+    background: linear-gradient(145deg, 
       hsl(24, 24%, 10%) 0%, 
-      hsl(24, 20%, 12%) 100%
+      hsl(24, 20%, 12%) 50%,
+      hsl(24, 24%, 10%) 100%
     );
     border: 1px solid hsl(24, 20%, 18%);
     box-shadow: 
-      0 4px 6px -1px rgb(0 0 0 / 0.2),
-      0 2px 4px -2px rgb(0 0 0 / 0.1),
+      0 8px 25px -5px rgb(0 0 0 / 0.3),
+      0 3px 10px -3px rgb(0 0 0 / 0.15),
       inset 0 1px 0 hsl(24, 20%, 15%);
+  }
+
+  /* Islamic geometric button styling */
+  .islamic-button {
+    position: relative;
+    background: linear-gradient(135deg, hsl(171, 100%, 30%) 0%, hsl(171, 80%, 35%) 100%);
+    border: none;
+    color: white;
+    transition: all 0.3s ease;
+    overflow: hidden;
+  }
+
+  .islamic-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+  }
+
+  .islamic-button:hover::before {
+    left: 100%;
+  }
+
+  .islamic-button:hover {
+    background: linear-gradient(135deg, hsl(171, 100%, 35%) 0%, hsl(171, 80%, 40%) 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 92, 92, 0.3);
   }
 }

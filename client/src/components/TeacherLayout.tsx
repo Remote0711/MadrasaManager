@@ -53,22 +53,29 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
       
       <div className="flex flex-col">
         {/* Header */}
-        <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
+        <header className="flex h-16 items-center gap-4 border-b bg-gradient-to-r from-primary/5 via-secondary/5 to-primary/5 px-4 lg:h-[70px] lg:px-6 islamic-ornament">
           <TeacherSidebar className="md:hidden" />
           
           <div className="w-full flex-1">
-            <h1 className="text-lg font-semibold md:text-2xl">{tr.teacherDashboard}</h1>
+            <h1 className="text-xl font-bold md:text-3xl bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+              {tr.teacherDashboard}
+            </h1>
+            <p className="text-xs text-muted-foreground mt-1 arabic-text">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</p>
           </div>
           
           <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">
-              {user.name} ({tr.roles[user.role.toLowerCase() as keyof typeof tr.roles]})
-            </span>
+            <div className="text-center">
+              <div className="text-sm font-medium text-primary">{user.name}</div>
+              <div className="text-xs text-muted-foreground">
+                {tr.roles[user.role.toLowerCase() as keyof typeof tr.roles]}
+              </div>
+            </div>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => logoutMutation.mutate()}
               disabled={logoutMutation.isPending}
+              className="islamic-button h-10 w-10 rounded-full"
             >
               <LogOut className="h-4 w-4" />
               <span className="sr-only">{tr.logout}</span>
@@ -77,8 +84,11 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
         </header>
         
         {/* Main Content */}
-        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
-          {children}
+        <main className="flex flex-1 flex-col gap-6 p-6 lg:gap-8 lg:p-8 relative">
+          <div className="absolute inset-0 islamic-pattern pointer-events-none"></div>
+          <div className="relative">
+            {children}
+          </div>
         </main>
       </div>
     </div>
