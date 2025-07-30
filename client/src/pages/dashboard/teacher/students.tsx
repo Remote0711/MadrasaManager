@@ -166,15 +166,24 @@ export default function TeacherStudents() {
     <TeacherLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold">{tr.myStudents}</h1>
-            <p className="text-muted-foreground">
-              Öğrencilerinizi takip edin ve değerlendirin
-            </p>
-          </div>
-          <div className="text-sm text-muted-foreground">
-            Toplam: {students?.length || 0} öğrenci
+        <div className="relative">
+          <div className="absolute inset-0 islamic-pattern"></div>
+          <div className="relative bg-gradient-to-r from-primary/5 via-secondary/5 to-primary/5 p-6 rounded-xl border border-primary/10">
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                  {tr.myStudents}
+                </h1>
+                <p className="text-muted-foreground mt-2 text-lg">
+                  <span className="inline-block w-1 h-4 bg-primary/60 mr-2 rounded"></span>
+                  Öğrencilerinizi takip edin ve değerlendirin
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary">{students?.length || 0}</div>
+                <div className="text-sm text-muted-foreground">Toplam Öğrenci</div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -183,43 +192,53 @@ export default function TeacherStudents() {
           {students?.map((student) => {
             const progress = mockProgress(student.id);
             return (
-              <Card key={student.id} className="hover:shadow-md transition-shadow">
-                <CardHeader>
+              <Card key={student.id} className="islamic-card hover:shadow-lg transition-all duration-300 border-l-4 border-l-primary">
+                <CardHeader className="pb-3">
                   <CardTitle className="flex items-center justify-between">
                     <div className="flex items-center">
-                      <Users className="mr-2 h-5 w-5" />
+                      <div className="p-2 rounded-full bg-primary/10 mr-3">
+                        <Users className="h-5 w-5 text-primary" />
+                      </div>
                       <div>
-                        <div className="text-sm font-medium">{student.firstName} {student.lastName}</div>
-                        <div className="text-xs text-muted-foreground">{student.class?.name}</div>
+                        <div className="text-lg font-semibold">{student.firstName} {student.lastName}</div>
+                        <div className="text-sm text-muted-foreground flex items-center">
+                          <span className="w-2 h-2 rounded-full bg-primary/60 mr-2"></span>
+                          {student.class?.name}
+                        </div>
                       </div>
                     </div>
-                    <Badge className={getProgressColor(progress)}>
+                    <Badge className={`${getProgressColor(progress)} px-3 py-1 text-sm font-semibold`}>
                       %{progress}
                     </Badge>
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-0">
                   <div className="space-y-4">
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <TrendingUp className="mr-2 h-4 w-4" />
-                      Son hafta: {Math.floor(Math.random() * 20)} sayfa
+                    <div className="flex items-center justify-between p-3 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-lg border border-primary/10">
+                      <div className="flex items-center text-sm font-medium">
+                        <TrendingUp className="mr-2 h-4 w-4 text-primary" />
+                        Son hafta
+                      </div>
+                      <span className="text-primary font-semibold">{Math.floor(Math.random() * 20)} sayfa</span>
                     </div>
                     
-                    <div className="space-y-2">
-                      <div className="text-sm">
-                        <span className="font-medium">Program:</span> {student.class?.programType?.name}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Program:</span>
+                        <span className="font-medium text-primary">{student.class?.programType?.name}</span>
                       </div>
-                      <div className="text-sm">
-                        <span className="font-medium">Kayıt:</span>{" "}
-                        {new Date(student.enrollmentDate).toLocaleDateString('tr-TR')}
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Kayıt:</span>
+                        <span className="font-medium">{new Date(student.enrollmentDate).toLocaleDateString('tr-TR')}</span>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-2 pt-4">
+                    <div className="grid grid-cols-3 gap-2 pt-4 border-t border-primary/10">
                       <Button 
                         variant="outline" 
                         size="sm"
                         onClick={() => handleDetails(student)}
+                        className="border-primary/20 text-primary hover:bg-primary/5 hover:border-primary/30"
                       >
                         <Eye className="mr-1 h-3 w-3" />
                         Detay
@@ -228,6 +247,7 @@ export default function TeacherStudents() {
                         variant="outline" 
                         size="sm"
                         onClick={() => handleEdit(student)}
+                        className="border-secondary/50 text-secondary-foreground hover:bg-secondary/20"
                       >
                         <Edit className="mr-1 h-3 w-3" />
                         Düzenle
@@ -236,7 +256,7 @@ export default function TeacherStudents() {
                         variant="outline" 
                         size="sm"
                         onClick={() => openProgressDialog(student)}
-                        className="bg-blue-50 text-blue-700 hover:bg-blue-100"
+                        className="border-accent/50 text-accent-foreground hover:bg-accent/20"
                       >
                         <BookOpen className="mr-1 h-3 w-3" />
                         İlerleme
@@ -250,11 +270,13 @@ export default function TeacherStudents() {
         </div>
 
         {/* Students Table */}
-        <Card>
-          <CardHeader>
+        <Card className="islamic-card">
+          <CardHeader className="bg-gradient-to-r from-primary/5 to-secondary/5 border-b border-primary/10">
             <CardTitle className="flex items-center">
-              <Users className="mr-2 h-5 w-5" />
-              Öğrenci Listesi ({students?.length || 0})
+              <div className="p-2 rounded-full bg-primary/10 mr-3">
+                <Users className="h-5 w-5 text-primary" />
+              </div>
+              <span className="text-xl font-semibold">Öğrenci Listesi ({students?.length || 0})</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -462,11 +484,13 @@ export default function TeacherStudents() {
             {detailsStudent && (
               <div className="space-y-6">
                 {/* Basic Information */}
-                <Card>
-                  <CardHeader>
+                <Card className="islamic-card border-l-4 border-l-primary">
+                  <CardHeader className="bg-gradient-to-r from-primary/5 to-secondary/5">
                     <CardTitle className="flex items-center">
-                      <BookOpen className="mr-2 h-4 w-4" />
-                      Temel Bilgiler
+                      <div className="p-2 rounded-full bg-primary/10 mr-3">
+                        <BookOpen className="h-4 w-4 text-primary" />
+                      </div>
+                      <span className="text-lg font-semibold">Temel Bilgiler</span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -502,11 +526,13 @@ export default function TeacherStudents() {
                 </Card>
 
                 {/* Attendance Statistics */}
-                <Card>
-                  <CardHeader>
+                <Card className="islamic-card border-l-4 border-l-primary">
+                  <CardHeader className="bg-gradient-to-r from-primary/5 to-secondary/5">
                     <CardTitle className="flex items-center">
-                      <Calendar className="mr-2 h-4 w-4" />
-                      Devam İstatistikleri
+                      <div className="p-2 rounded-full bg-primary/10 mr-3">
+                        <Calendar className="h-4 w-4 text-primary" />
+                      </div>
+                      <span className="text-lg font-semibold">Devam İstatistikleri</span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -556,11 +582,13 @@ export default function TeacherStudents() {
                 </Card>
 
                 {/* Academic Progress */}
-                <Card>
-                  <CardHeader>
+                <Card className="islamic-card border-l-4 border-l-primary">
+                  <CardHeader className="bg-gradient-to-r from-primary/5 to-secondary/5">
                     <CardTitle className="flex items-center">
-                      <TrendingUp className="mr-2 h-4 w-4" />
-                      Akademik İlerleme
+                      <div className="p-2 rounded-full bg-primary/10 mr-3">
+                        <TrendingUp className="h-4 w-4 text-primary" />
+                      </div>
+                      <span className="text-lg font-semibold">Akademik İlerleme</span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -611,11 +639,13 @@ export default function TeacherStudents() {
                 </Card>
 
                 {/* Behavior & Notes */}
-                <Card>
-                  <CardHeader>
+                <Card className="islamic-card border-l-4 border-l-primary">
+                  <CardHeader className="bg-gradient-to-r from-primary/5 to-secondary/5">
                     <CardTitle className="flex items-center">
-                      <Users className="mr-2 h-4 w-4" />
-                      Davranış ve Notlar
+                      <div className="p-2 rounded-full bg-primary/10 mr-3">
+                        <Users className="h-4 w-4 text-primary" />
+                      </div>
+                      <span className="text-lg font-semibold">Davranış ve Notlar</span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
