@@ -104,8 +104,40 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Class operations
-  async getAllClasses(): Promise<Class[]> {
-    return await db.select().from(classes);
+  async getAllClasses(): Promise<any[]> {
+    // Get classes with program types and student counts
+    const classesWithProgramTypes = await db.select()
+      .from(classes)
+      .leftJoin(programTypes, eq(classes.programTypeId, programTypes.id));
+
+    // Get student counts for each class
+    const classStudentCounts = await db.select({
+      classId: students.classId,
+      count: sql<number>`count(*)::int`
+    })
+    .from(students)
+    .groupBy(students.classId);
+
+    // Get some sample students for each class
+    const studentsData = await db.select({
+      id: students.id,
+      firstName: students.firstName,
+      lastName: students.lastName,
+      classId: students.classId
+    }).from(students);
+
+    return classesWithProgramTypes.map(result => {
+      const classId = result.classes.id;
+      const studentCount = classStudentCounts.find(sc => sc.classId === classId)?.count || 0;
+      const classStudents = studentsData.filter(s => s.classId === classId).slice(0, 5); // Sample of 5 students
+
+      return {
+        ...result.classes,
+        programType: result.program_types,
+        students: classStudents,
+        studentCount
+      };
+    });
   }
 
   async getClassById(id: string): Promise<Class | undefined> {

@@ -64,9 +64,15 @@ export default function AdminStudents() {
 
   // Filter students based on classId parameter
   const students = useMemo(() => {
+    console.log('Filter Debug:', { allStudents, classIdFilter, studentsLength: allStudents?.length });
     if (!allStudents) return [];
     if (!classIdFilter) return allStudents;
-    return allStudents.filter(student => student.classId === classIdFilter);
+    const filtered = allStudents.filter(student => {
+      console.log('Student filter check:', { studentId: student.id, studentClassId: student.classId, classIdFilter });
+      return student.classId === classIdFilter;
+    });
+    console.log('Filtered students:', filtered.length, filtered);
+    return filtered;
   }, [allStudents, classIdFilter]);
 
   // Get class name for display

@@ -101,6 +101,7 @@ export default function AdminClasses() {
   };
 
   const handleViewStudents = (classItem: ClassWithRelations) => {
+    console.log('Navigating to students with classId:', classItem.id);
     // Navigate to students page with class filter
     setLocation(`/dashboard/admin/students?classId=${classItem.id}`);
   };
