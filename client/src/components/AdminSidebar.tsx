@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { tr } from "@/lib/tr";
-import { Users, GraduationCap, BookOpen, Calendar, Menu, Home, ChevronLeft, ChevronRight } from "lucide-react";
+import { Users, GraduationCap, BookOpen, Calendar, Menu, Home, ChevronLeft, ChevronRight, BarChart3 } from "lucide-react";
 import { useState } from "react";
 
 interface AdminSidebarProps {
@@ -17,6 +17,11 @@ const sidebarItems = [
     name: tr.dashboard,
     href: '/dashboard/admin',
     icon: Home,
+  },
+  {
+    name: 'İstatistikler',
+    href: '/dashboard/admin/statistics',
+    icon: BarChart3,
   },
   {
     name: tr.users,
