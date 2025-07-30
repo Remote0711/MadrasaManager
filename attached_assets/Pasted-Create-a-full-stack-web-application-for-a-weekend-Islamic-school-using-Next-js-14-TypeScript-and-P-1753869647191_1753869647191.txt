@@ -1,0 +1,75 @@
+Create a full-stack web application for a weekend Islamic school using Next.js 14 + TypeScript and Prisma with PostgreSQL.  
+The user interface (labels, titles, buttons, placeholders, error messages) must be entirely in Turkish.
+
+---
+
+1. Authentication:
+- Use NextAuth (credentials provider)
+- Roles: ADMIN, TEACHER, PARENT
+- Route protection with role-based guards
+
+---
+
+2. Prisma data models:
+- User (name, email, password, role)
+- Parent (linked to User + Student)
+- Class (name, level)
+- Student (firstname, lastname, class, attendance, progress, behavior)
+- LessonPlan (week, subject, pagesFrom/to, classLevel, programType)
+- ProgramType (e.g. "Haftasonu", "Yatılı", "Yetişkin") ← NEW
+- Progress (pagesDone vs. planned)
+- Attendance (with categorized reason: geldi, gelmedi, mazeretli)
+- Behavior (weekly comments)
+
+---
+
+3. Seed script:
+- 2 admins, 3 teachers, 6 parents
+- 6 classes (T1a–T3b)
+- 60 students
+- 3 ProgramTypes: "Haftasonu", "Yatılı", "Yetişkin"
+- LessonPlans for 10 weeks assigned to each ProgramType
+
+---
+
+4. File structure:
+prisma/schema.prisma  
+src/pages/index.tsx  
+src/pages/api/auth/[...nextauth].ts  
+src/pages/dashboard/admin/  
+src/pages/dashboard/teacher/  
+src/pages/dashboard/parent/  
+src/lib/prisma.ts  
+src/lib/auth.ts  
+src/lib/ai.ts (placeholder for `generateReport(studentId)`)  
+src/components/Layout.tsx  
+src/i18n/tr.json  
+public/logo.svg  
+
+---
+
+5. Features:
+- Admin Dashboard: manage users, classes, lesson plans, assign program types
+- Teacher Dashboard: weekly progress input, attendance, behavior tracking, AI Report button (disabled)
+- Parent Dashboard: see child's progress and attendance
+- Auto calculation: % of lesson plan fulfilled → progress bar (green ≥ 90 %, yellow 50–89 %, red < 50 %)
+
+---
+
+6. Responsive UI: Tailwind CSS for mobile, tablet, and laptop
+
+---
+
+7. .replit:
+entrypoint = "src/pages/index.tsx"  
+run = "npm run dev"
+
+---
+
+8. README.md:
+- Setup steps: install, prisma db push, dev
+- Explain Turkish-only UI and how to extend ProgramTypes
+
+---
+
+Deliver complete, runnable project inside Replit.
