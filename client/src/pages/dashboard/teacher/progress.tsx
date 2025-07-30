@@ -25,6 +25,7 @@ export default function TeacherProgress() {
   const [ayahNumber, setAyahNumber] = useState<string>("");
   const [behaviorNote, setBehaviorNote] = useState<string>("");
   const [attendanceStatus, setAttendanceStatus] = useState<string[]>([]);
+  const [studentAttendanceMap, setStudentAttendanceMap] = useState<Record<string, string[]>>({});
   
   const { data: students, isLoading } = useQuery<Student[]>({
     queryKey: ['/api/teacher/students'],
@@ -140,6 +141,24 @@ export default function TeacherProgress() {
     return ['successful', 'improving', 'needs_attention'][statusIndex];
   };
 
+  const toggleAttendanceStatus = (studentId: string, status: 'late' | 'early') => {
+    setStudentAttendanceMap(prev => {
+      const currentStatuses = prev[studentId] || [];
+      const updatedStatuses = currentStatuses.includes(status)
+        ? currentStatuses.filter(s => s !== status)
+        : [...currentStatuses, status];
+      
+      return {
+        ...prev,
+        [studentId]: updatedStatuses
+      };
+    });
+  };
+
+  const getStudentAttendanceStatuses = (studentId: string) => {
+    return studentAttendanceMap[studentId] || [];
+  };
+
   return (
     <TeacherLayout>
       <div className="space-y-6">
@@ -224,22 +243,34 @@ export default function TeacherProgress() {
                           </div>
                         </td>
                         <td className="py-4 px-4">
-                          <div className="flex flex-wrap gap-1">
-                            <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-800">
+                          <div className="flex flex-col gap-2">
+                            {/* Always show base attendance */}
+                            <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-800 w-fit">
                               Geldi
                             </span>
-                            {Math.abs(student.id.charCodeAt(3)) % 3 === 0 && (
-                              <span className="text-xs px-2 py-1 rounded-full bg-yellow-100 text-yellow-800 flex items-center">
+                            
+                            {/* Quick attendance controls */}
+                            <div className="flex gap-1">
+                              <Button
+                                size="sm"
+                                variant={getStudentAttendanceStatuses(student.id).includes('late') ? "default" : "outline"}
+                                className={`text-xs px-2 py-1 h-6 ${getStudentAttendanceStatuses(student.id).includes('late') ? 'bg-yellow-100 text-yellow-800 border-yellow-300' : 'hover:bg-yellow-50'}`}
+                                onClick={() => toggleAttendanceStatus(student.id, 'late')}
+                              >
                                 <Clock className="w-3 h-3 mr-1" />
                                 Geç
-                              </span>
-                            )}
-                            {Math.abs(student.id.charCodeAt(4)) % 4 === 0 && (
-                              <span className="text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-800 flex items-center">
+                              </Button>
+                              
+                              <Button
+                                size="sm"
+                                variant={getStudentAttendanceStatuses(student.id).includes('early') ? "default" : "outline"}
+                                className={`text-xs px-2 py-1 h-6 ${getStudentAttendanceStatuses(student.id).includes('early') ? 'bg-orange-100 text-orange-800 border-orange-300' : 'hover:bg-orange-50'}`}
+                                onClick={() => toggleAttendanceStatus(student.id, 'early')}
+                              >
                                 <LogOut className="w-3 h-3 mr-1" />
                                 Erken
-                              </span>
-                            )}
+                              </Button>
+                            </div>
                           </div>
                         </td>
                         <td className="py-4 px-4">
