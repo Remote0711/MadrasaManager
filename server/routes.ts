@@ -83,7 +83,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       requireRole(req.session.user || null, ['ADMIN']);
       const { id } = req.params;
-      const updateData = insertUserSchema.omit({ id: true, password: true }).parse(req.body);
+      const { password, ...updateData } = req.body;
+      // Remove password from updateData if it exists
+      delete (updateData as any).password;
       const updatedUser = await storage.updateUser(id, updateData);
       res.json(updatedUser);
     } catch (error) {
