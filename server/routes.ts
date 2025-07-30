@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import session from 'express-session';
 import { storage } from "./storage";
 import { authenticateUser, hashPassword, requireAuth, requireRole, type AuthUser } from "./auth";
-import { insertUserSchema, insertStudentSchema, insertProgressSchema, insertAttendanceSchema, insertBehaviorSchema } from "@shared/schema";
+import { insertUserSchema, insertStudentSchema, insertProgressSchema, insertAttendanceSchema, insertBehaviorSchema, insertLessonPlanSchema } from "@shared/schema";
 
 declare module 'express-session' {
   interface SessionData {
@@ -127,6 +127,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(parents);
     } catch (error) {
       res.status(403).json({ message: (error as Error).message });
+    }
+  });
+
+  app.get('/api/admin/lesson-plans', async (req, res) => {
+    try {
+      requireRole(req.session.user || null, ['ADMIN', 'TEACHER']);
+      const { programTypeId } = req.query;
+      if (programTypeId) {
+        const lessonPlans = await storage.getLessonPlansByProgramType(programTypeId as string);
+        res.json(lessonPlans);
+      } else {
+        // Return all lesson plans if no program type specified
+        const lessonPlans = await storage.getLessonPlansByProgramType('');
+        res.json(lessonPlans);
+      }
+    } catch (error) {
+      res.status(403).json({ message: (error as Error).message });
+    }
+  });
+
+  app.post('/api/admin/lesson-plans', async (req, res) => {
+    try {
+      requireRole(req.session.user || null, ['ADMIN', 'TEACHER']);
+      const lessonPlanData = insertLessonPlanSchema.parse(req.body);
+      const lessonPlan = await storage.createLessonPlan(lessonPlanData);
+      res.json(lessonPlan);
+    } catch (error) {
+      res.status(400).json({ message: (error as Error).message });
     }
   });
 

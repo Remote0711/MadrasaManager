@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Users, GraduationCap, BookOpen, TrendingUp } from "lucide-react";
 import AddUserDialog from "@/components/forms/AddUserDialog";
 import AddStudentDialog from "@/components/forms/AddStudentDialog";
+import AddLessonPlanDialog from "@/components/forms/AddLessonPlanDialog";
 import { tr } from "@/lib/tr";
 
 interface Stats {
@@ -128,10 +129,7 @@ export default function AdminDashboard() {
               <CardContent className="space-y-4">
                 <AddUserDialog />
                 <AddStudentDialog />
-                <Button variant="outline" className="w-full justify-start">
-                  <BookOpen className="mr-2 h-4 w-4" />
-                  {tr.createLessonPlan}
-                </Button>
+                <AddLessonPlanDialog />
               </CardContent>
             </Card>
 

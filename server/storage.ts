@@ -41,6 +41,7 @@ export interface IStorage {
   createParent(parent: InsertParent): Promise<Parent>;
 
   // Lesson Plan operations
+  getAllLessonPlans(): Promise<LessonPlan[]>;
   getLessonPlansByProgramType(programTypeId: string): Promise<LessonPlan[]>;
   createLessonPlan(lessonPlan: InsertLessonPlan): Promise<LessonPlan>;
 
@@ -207,7 +208,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Lesson Plan operations
+  async getAllLessonPlans(): Promise<LessonPlan[]> {
+    return await db.select().from(lessonPlans);
+  }
+
   async getLessonPlansByProgramType(programTypeId: string): Promise<LessonPlan[]> {
+    if (!programTypeId) {
+      return this.getAllLessonPlans();
+    }
     return await db.select().from(lessonPlans).where(eq(lessonPlans.programTypeId, programTypeId));
   }
 
