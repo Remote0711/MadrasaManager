@@ -1,0 +1,125 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  TEACHER
+  PARENT
+}
+
+enum AttendanceStatus {
+  geldi
+  gelmedi
+  mazeretli
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role
+  createdAt DateTime @default(now())
+  parents   Parent[]
+
+  @@map("users")
+}
+
+model ProgramType {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  description String?
+  classes     Class[]
+  lessonPlans LessonPlan[]
+
+  @@map("program_types")
+}
+
+model Class {
+  id            String      @id @default(cuid())
+  name          String      @unique
+  level         Int
+  programTypeId String
+  programType   ProgramType @relation(fields: [programTypeId], references: [id])
+  students      Student[]
+
+  @@map("classes")
+}
+
+model Student {
+  id         String       @id @default(cuid())
+  firstName  String
+  lastName   String
+  classId    String
+  class      Class        @relation(fields: [classId], references: [id])
+  parents    Parent[]
+  progress   Progress[]
+  attendance Attendance[]
+  behavior   Behavior[]
+  createdAt  DateTime     @default(now())
+
+  @@map("students")
+}
+
+model Parent {
+  id        String  @id @default(cuid())
+  userId    String
+  studentId String
+  user      User    @relation(fields: [userId], references: [id])
+  student   Student @relation(fields: [studentId], references: [id])
+
+  @@map("parents")
+}
+
+model LessonPlan {
+  id            String      @id @default(cuid())
+  week          Int
+  subject       String
+  pagesFrom     Int
+  pagesTo       Int
+  classLevel    Int
+  programTypeId String
+  programType   ProgramType @relation(fields: [programTypeId], references: [id])
+
+  @@map("lesson_plans")
+}
+
+model Progress {
+  id           String   @id @default(cuid())
+  studentId    String
+  week         Int
+  pagesDone    Int      @default(0)
+  pagesPlanned Int
+  student      Student  @relation(fields: [studentId], references: [id])
+  createdAt    DateTime @default(now())
+
+  @@map("progress")
+}
+
+model Attendance {
+  id        String           @id @default(cuid())
+  studentId String
+  week      Int
+  status    AttendanceStatus
+  student   Student          @relation(fields: [studentId], references: [id])
+  date      DateTime         @default(now())
+
+  @@map("attendance")
+}
+
+model Behavior {
+  id        String   @id @default(cuid())
+  studentId String
+  week      Int
+  comment   String
+  student   Student  @relation(fields: [studentId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@map("behavior")
+}
