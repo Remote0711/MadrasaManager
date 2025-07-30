@@ -1,8 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useLocation } from "wouter";
 import AdminLayout from "@/components/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -47,14 +48,32 @@ export default function AdminStudents() {
   const [studentToDelete, setStudentToDelete] = useState<StudentWithRelations | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [location] = useLocation();
 
-  const { data: students, isLoading } = useQuery<StudentWithRelations[]>({
+  // Get classId from URL parameters
+  const urlParams = new URLSearchParams(location.split('?')[1] || '');
+  const classIdFilter = urlParams.get('classId');
+
+  const { data: allStudents, isLoading } = useQuery<StudentWithRelations[]>({
     queryKey: ['/api/admin/students'],
   });
 
   const { data: classes = [] } = useQuery<Class[]>({
     queryKey: ['/api/admin/classes'],
   });
+
+  // Filter students based on classId parameter
+  const students = useMemo(() => {
+    if (!allStudents) return [];
+    if (!classIdFilter) return allStudents;
+    return allStudents.filter(student => student.classId === classIdFilter);
+  }, [allStudents, classIdFilter]);
+
+  // Get class name for display
+  const selectedClass = useMemo(() => {
+    if (!classIdFilter || !classes) return null;
+    return classes.find(cls => cls.id === classIdFilter);
+  }, [classIdFilter, classes]);
 
   const form = useForm<UpdateStudentData>({
     resolver: zodResolver(updateStudentSchema),
@@ -168,12 +187,24 @@ export default function AdminStudents() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold">{tr.students}</h1>
+            <h1 className="text-3xl font-bold">
+              {selectedClass ? `${selectedClass.name} - Öğrenciler` : tr.students}
+            </h1>
             <p className="text-muted-foreground">
-              Öğrenci kayıtlarını yönetin
+              {selectedClass 
+                ? `${selectedClass.name} sınıfındaki ${students?.length || 0} öğrenci`
+                : "Öğrenci kayıtlarını yönetin"
+              }
             </p>
           </div>
-          <AddStudentDialog />
+          <div className="flex gap-2">
+            {selectedClass && (
+              <Button variant="outline" onClick={() => window.history.back()}>
+                Geri Dön
+              </Button>
+            )}
+            <AddStudentDialog />
+          </div>
         </div>
 
         {/* Students Table */}
