@@ -110,7 +110,7 @@ export default function TeacherProgress() {
                     <SelectContent>
                       {students?.map((student) => (
                         <SelectItem key={student.id} value={student.id}>
-                          {student.name} - {student.class?.name}
+                          {student.firstName} {student.lastName}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -164,8 +164,8 @@ export default function TeacherProgress() {
                     <div className="flex items-center">
                       <Users className="mr-2 h-5 w-5" />
                       <div>
-                        <div className="text-sm font-medium">{student.name}</div>
-                        <div className="text-xs text-muted-foreground">{student.class?.name}</div>
+                        <div className="text-sm font-medium">{student.firstName} {student.lastName}</div>
+                        <div className="text-xs text-muted-foreground">Öğrenci</div>
                       </div>
                     </div>
                     <Badge className={getProgressColor(progress)}>
@@ -236,9 +236,9 @@ export default function TeacherProgress() {
                     
                     return (
                       <tr key={student.id} className="border-b hover:bg-muted/50">
-                        <td className="py-3 px-4 font-medium">{student.name}</td>
+                        <td className="py-3 px-4 font-medium">{student.firstName} {student.lastName}</td>
                         <td className="py-3 px-4 text-muted-foreground">
-                          {student.class?.name || 'Atanmamış'}
+                          Öğrenci
                         </td>
                         <td className="py-3 px-4 text-muted-foreground">{weeklyPages} sayfa</td>
                         <td className="py-3 px-4">
@@ -252,7 +252,8 @@ export default function TeacherProgress() {
                             status === 'improving' ? 'bg-yellow-100 text-yellow-800' :
                             'bg-red-100 text-red-800'
                           }`}>
-                            {tr[status as keyof typeof tr]}
+                            {status === 'successful' ? 'Başarılı' :
+                             status === 'improving' ? 'Gelişiyor' : 'Dikkat Gerekiyor'}
                           </span>
                         </td>
                         <td className="py-3 px-4 text-right text-muted-foreground">

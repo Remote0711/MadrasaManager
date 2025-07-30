@@ -50,7 +50,7 @@ export default function AdminLessonPlans() {
 
   // Get unique weeks for filter dropdown
   const availableWeeks = useMemo(() => {
-    const weeks = [...new Set(enhancedLessonPlans.map(plan => plan.week))].sort((a, b) => a - b);
+    const weeks = Array.from(new Set(enhancedLessonPlans.map(plan => plan.week))).sort((a, b) => a - b);
     return weeks;
   }, [enhancedLessonPlans]);
 

@@ -57,6 +57,14 @@ Preferred communication style: Simple, everyday language.
 - **Progress Visualization**: Color-coded progress bars and status indicators
 - **Collapsible Sidebar**: Desktop sidebar can be collapsed/expanded for better screen real estate
 
+## Recent Changes
+
+### January 30, 2025
+- **Fixed Login System**: Resolved frontend authentication issues where error handling was conflicting with API request function
+- **Simplified Lesson Plans Page**: Removed add/edit functionality per user request, keeping only list view with week filtering
+- **Fixed Progress Page Student Display**: Corrected field mapping from `student.name` to `student.firstName + student.lastName` to match database schema
+- **Fixed TypeScript Issues**: Resolved Set iteration and field mapping errors across admin and teacher interfaces
+
 ## Data Flow
 
 ### Authentication Flow
@@ -74,7 +82,7 @@ Preferred communication style: Simple, everyday language.
 5. Optimistic updates provide immediate user feedback
 
 ### Progress Tracking Flow
-1. Teachers input weekly progress and attendance data
+1. Teachers input weekly progress and attendance data for individual students
 2. System calculates progress percentages based on lesson plans
 3. Color-coded indicators provide visual feedback
 4. Parents can view their child's progress in real-time
