@@ -53,6 +53,11 @@ export default function AdminStudents() {
   // Get classId from URL parameters
   const urlParams = new URLSearchParams(location.split('?')[1] || '');
   const classIdFilter = urlParams.get('classId');
+  
+  // Debug logging
+  console.log('Current location:', location);
+  console.log('URL params:', urlParams.toString());
+  console.log('Class ID filter:', classIdFilter);
 
   const { data: allStudents, isLoading } = useQuery<StudentWithRelations[]>({
     queryKey: ['/api/admin/students'],
