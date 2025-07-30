@@ -23,7 +23,7 @@ interface StudentWithDetails extends Student {
   parent?: UserType;
 }
 
-export default function StudentProfile() {
+function StudentProfile() {
   const [match, params] = useRoute("/dashboard/admin/students/:id");
   const studentId = params?.id;
 
@@ -133,7 +133,7 @@ export default function StudentProfile() {
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-500">Kayıt Tarihi</label>
-                    <p className="text-lg">{formatDate(student.enrollmentDate)}</p>
+                    <p className="text-lg">{formatDate(student.enrollmentDate?.toString() || null)}</p>
                   </div>
                 </div>
               </CardContent>
@@ -238,3 +238,5 @@ export default function StudentProfile() {
     </AdminLayout>
   );
 }
+
+export default StudentProfile;
