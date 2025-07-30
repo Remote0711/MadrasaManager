@@ -3,6 +3,8 @@ import AdminLayout from "@/components/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Users, GraduationCap, BookOpen, TrendingUp } from "lucide-react";
+import AddUserDialog from "@/components/forms/AddUserDialog";
+import AddStudentDialog from "@/components/forms/AddStudentDialog";
 import { tr } from "@/lib/tr";
 
 interface Stats {
@@ -124,14 +126,8 @@ export default function AdminDashboard() {
                 <CardTitle>{tr.quickActions}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Button className="w-full justify-start">
-                  <Users className="mr-2 h-4 w-4" />
-                  {tr.addNewUser}
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  <GraduationCap className="mr-2 h-4 w-4" />
-                  {tr.registerStudent}
-                </Button>
+                <AddUserDialog />
+                <AddStudentDialog />
                 <Button variant="outline" className="w-full justify-start">
                   <BookOpen className="mr-2 h-4 w-4" />
                   {tr.createLessonPlan}

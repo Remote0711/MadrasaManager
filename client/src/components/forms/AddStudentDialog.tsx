@@ -27,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { GraduationCap } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { insertStudentSchema, type Class, type User } from "@shared/schema";
@@ -102,8 +102,8 @@ export default function AddStudentDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
+        <Button variant="outline" className="w-full justify-start">
+          <GraduationCap className="mr-2 h-4 w-4" />
           Öğrenci Kaydet
         </Button>
       </DialogTrigger>
