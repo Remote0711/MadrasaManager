@@ -31,12 +31,9 @@ export default function TeacherProgress() {
   const progressMutation = useMutation({
     mutationFn: async (data: {
       studentId: string;
-      weekNumber: number;
-      weeklyPages: number;
-      quranPage?: number;
-      surahName?: string;
-      ayahNumber?: number;
-      behaviorNote?: string;
+      week: number;
+      pagesDone: number;
+      pagesPlanned: number;
     }) => {
       const response = await apiRequest("POST", "/api/teacher/progress", data);
       return response.json();
@@ -76,12 +73,9 @@ export default function TeacherProgress() {
 
     progressMutation.mutate({
       studentId: editingStudent.id,
-      weekNumber: getCurrentWeek(),
-      weeklyPages: parseInt(weeklyPages),
-      quranPage: quranPage ? parseInt(quranPage) : undefined,
-      surahName: surahName || undefined,
-      ayahNumber: ayahNumber ? parseInt(ayahNumber) : undefined,
-      behaviorNote: behaviorNote || undefined,
+      week: getCurrentWeek(),
+      pagesDone: parseInt(weeklyPages),
+      pagesPlanned: parseInt(weeklyPages) + 5, // Set planned pages slightly higher than completed
     });
   };
 
