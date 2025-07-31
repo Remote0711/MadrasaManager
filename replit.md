@@ -59,6 +59,13 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### July 31, 2025
+- **Fixed Attendance System**: Resolved all 400 errors and foreign key constraint violations in attendance API
+- **Enhanced Attendance Features**: Added late arrival and early departure options with time tracking and notes
+- **Streamlined Attendance Interface**: Removed card-based boxes and simplified to clean list format per user request
+- **Database Schema Updates**: Added arrival_time, departure_time, and notes fields to attendance table
+- **Comprehensive Testing**: Successfully tested all attendance statuses (geldi, gec_geldi, erken_cikti, mazeretli, gelmedi)
+
 ### January 30, 2025
 - **Fixed Login System**: Resolved frontend authentication issues where error handling was conflicting with API request function
 - **Simplified Lesson Plans Page**: Removed add/edit functionality per user request, keeping only list view with week filtering

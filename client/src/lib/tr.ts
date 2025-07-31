@@ -88,7 +88,8 @@ export const tr = {
   earlyDeparture: "Erken Çıktı",
   attendanceMarked: "Devam durumu işaretlendi",
   attendanceMarkError: "Devam durumu işaretlenemedi",
-  departureTime: "Çıkış Saati",
+  arrivalTime: "Geliş Saati",
+  departureTime: "Çıkış Saati", 
   attendanceNotes: "Devam Notları",
 
   // Parent specific

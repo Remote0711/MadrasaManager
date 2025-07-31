@@ -91,8 +91,8 @@ export default function AttendanceTracker({ students }: AttendanceTrackerProps) 
 
   return (
     <>
-      <div className="space-y-4">
-        {students.slice(0, 10).map((student) => (
+      <div className="space-y-3">
+        {students.map((student) => (
           <div
             key={student.id}
             className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50"
