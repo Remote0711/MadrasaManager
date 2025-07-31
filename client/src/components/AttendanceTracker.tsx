@@ -23,8 +23,8 @@ export default function AttendanceTracker({ students }: AttendanceTrackerProps) 
   const [arrivalTime, setArrivalTime] = useState('');
   const [departureTime, setDepartureTime] = useState('');
   const [notes, setNotes] = useState('');
-  // Track attendance status for each student to show visual feedback
-  const [studentAttendanceStatus, setStudentAttendanceStatus] = useState<Record<string, AttendanceStatus>>({});
+  // Track multiple attendance statuses for each student to show visual feedback
+  const [studentAttendanceStatus, setStudentAttendanceStatus] = useState<Record<string, Set<AttendanceStatus>>>({});
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -43,10 +43,31 @@ export default function AttendanceTracker({ students }: AttendanceTrackerProps) 
     },
     onSuccess: (_, variables) => {
       // Update local state to show visual feedback
-      setStudentAttendanceStatus(prev => ({
-        ...prev,
-        [variables.studentId]: variables.status
-      }));
+      setStudentAttendanceStatus(prev => {
+        const currentStatuses = prev[variables.studentId] || new Set();
+        const newStatuses = new Set(currentStatuses);
+        
+        // Handle mutually exclusive statuses
+        if (variables.status === 'gelmedi') {
+          // If absent, clear all other statuses
+          newStatuses.clear();
+          newStatuses.add('gelmedi');
+        } else if (variables.status === 'geldi') {
+          // If present, remove absent and add present
+          newStatuses.delete('gelmedi');
+          newStatuses.add('geldi');
+        } else {
+          // For other statuses (late, early departure, excused), add to existing
+          newStatuses.delete('gelmedi'); // Can't be absent if they have other statuses
+          newStatuses.add('geldi'); // Must be present to have other statuses
+          newStatuses.add(variables.status);
+        }
+        
+        return {
+          ...prev,
+          [variables.studentId]: newStatuses
+        };
+      });
       
       toast({
         title: tr.success,
@@ -73,10 +94,31 @@ export default function AttendanceTracker({ students }: AttendanceTrackerProps) 
     const currentWeek = Math.ceil((new Date().getTime() - new Date(2024, 8, 1).getTime()) / (1000 * 60 * 60 * 24 * 7));
     
     // Immediately update visual state for feedback
-    setStudentAttendanceStatus(prev => ({
-      ...prev,
-      [studentId]: status
-    }));
+    setStudentAttendanceStatus(prev => {
+      const currentStatuses = prev[studentId] || new Set();
+      const newStatuses = new Set(currentStatuses);
+      
+      // Handle mutually exclusive statuses
+      if (status === 'gelmedi') {
+        // If absent, clear all other statuses
+        newStatuses.clear();
+        newStatuses.add('gelmedi');
+      } else if (status === 'geldi') {
+        // If present, remove absent and add present
+        newStatuses.delete('gelmedi');
+        newStatuses.add('geldi');
+      } else {
+        // For other statuses (late, early departure, excused), add to existing
+        newStatuses.delete('gelmedi'); // Can't be absent if they have other statuses
+        newStatuses.add('geldi'); // Must be present to have other statuses
+        newStatuses.add(status);
+      }
+      
+      return {
+        ...prev,
+        [studentId]: newStatuses
+      };
+    });
     
     if (status === 'gec_geldi' || status === 'erken_cikti') {
       const student = students.find(s => s.id === studentId);
@@ -90,7 +132,8 @@ export default function AttendanceTracker({ students }: AttendanceTrackerProps) 
 
   // Helper function to get button style based on status
   const getButtonStyle = (studentId: string, status: AttendanceStatus) => {
-    const isSelected = studentAttendanceStatus[studentId] === status;
+    const studentStatuses = studentAttendanceStatus[studentId] || new Set<AttendanceStatus>();
+    const isSelected = studentStatuses.has && studentStatuses.has(status);
     const baseClasses = "flex-1 text-sm py-2 px-3 rounded-md transition-all duration-200 font-medium";
     
     switch (status) {
