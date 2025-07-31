@@ -91,6 +91,14 @@ export const tr = {
   arrivalTime: "Geliş Saati",
   departureTime: "Çıkış Saati", 
   attendanceNotes: "Devam Notları",
+  parentContact: "Veli İletişim",
+  parentName: "Veli Adı",
+  relationship: "Yakınlık",
+  phoneNumber: "Telefon",
+  emailAddress: "E-posta",
+  callParent: "Veli Ara",
+  emailParent: "E-posta Gönder",
+  noParentInfo: "Veli bilgisi kayıtlı değil",
 
   // Parent specific
   myChild: "Çocuğum",

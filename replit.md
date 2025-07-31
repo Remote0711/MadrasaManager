@@ -63,7 +63,8 @@ Preferred communication style: Simple, everyday language.
 - **Fixed Attendance System**: Resolved all 400 errors and foreign key constraint violations in attendance API
 - **Enhanced Attendance Features**: Added late arrival and early departure options with time tracking and notes
 - **Streamlined Attendance Interface**: Removed card-based boxes and simplified to clean list format per user request
-- **Database Schema Updates**: Added arrival_time, departure_time, and notes fields to attendance table
+- **Added Parent Contact Information**: Teachers can now view parent contact details in student profiles for emergency communication
+- **Database Schema Updates**: Added arrival_time, departure_time, and notes fields to attendance table, plus StudentWithParent type
 - **Comprehensive Testing**: Successfully tested all attendance statuses (geldi, gec_geldi, erken_cikti, mazeretli, gelmedi)
 
 ### January 30, 2025

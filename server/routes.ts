@@ -248,6 +248,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/teacher/students/:id', async (req, res) => {
+    try {
+      requireRole(req.session.user || null, ['TEACHER', 'ADMIN']);
+      const { id } = req.params;
+      const student = await storage.getStudentWithParent(id);
+      if (!student) {
+        return res.status(404).json({ message: 'Öğrenci bulunamadı' });
+      }
+      res.json(student);
+    } catch (error) {
+      res.status(400).json({ message: (error as Error).message });
+    }
+  });
+
   app.patch('/api/teacher/students/:id', async (req, res) => {
     try {
       requireRole(req.session.user || null, ['TEACHER', 'ADMIN']);

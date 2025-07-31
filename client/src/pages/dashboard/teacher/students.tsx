@@ -42,6 +42,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { 
   type StudentWithClass, 
+  type StudentWithParent,
   type Class,
   insertStudentSchema,
   type InsertStudent 
@@ -62,7 +63,7 @@ export default function TeacherStudents() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [progressStudent, setProgressStudent] = useState<StudentWithClass | null>(null);
   const [progressDialogOpen, setProgressDialogOpen] = useState(false);
-  const [detailsStudent, setDetailsStudent] = useState<StudentWithClass | null>(null);
+  const [detailsStudent, setDetailsStudent] = useState<StudentWithParent | null>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -73,6 +74,11 @@ export default function TeacherStudents() {
 
   const { data: classes = [] } = useQuery<Class[]>({
     queryKey: ['/api/admin/classes'],
+  });
+
+  const { data: studentDetails, isLoading: isLoadingDetails } = useQuery<StudentWithParent>({
+    queryKey: ['/api/teacher/students', detailsStudent?.id],
+    enabled: !!detailsStudent?.id && detailsDialogOpen,
   });
 
   const form = useForm<UpdateStudentData>({
@@ -128,7 +134,7 @@ export default function TeacherStudents() {
   };
 
   const handleDetails = (student: StudentWithClass) => {
-    setDetailsStudent(student);
+    setDetailsStudent(student as StudentWithParent);
     setDetailsDialogOpen(true);
   };
 
@@ -533,6 +539,91 @@ export default function TeacherStudents() {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Parent Contact Information */}
+                {(studentDetails?.parent || isLoadingDetails) && (
+                  <Card className="islamic-card border-l-4 border-l-[#D4AF37]">
+                    <CardHeader className="bg-gradient-to-r from-[#D4AF37]/5 to-[#F5E6A3]/5">
+                      <CardTitle className="flex items-center">
+                        <div className="p-2 rounded-full bg-[#D4AF37]/10 mr-3">
+                          <UserCheck className="h-4 w-4 text-[#D4AF37]" />
+                        </div>
+                        <span className="text-lg font-semibold text-[#D4AF37]">Veli İletişim Bilgileri</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {isLoadingDetails ? (
+                        <div className="flex items-center justify-center py-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#D4AF37]"></div>
+                        </div>
+                      ) : studentDetails?.parent ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-4">
+                            <div>
+                              <div className="text-sm font-medium text-muted-foreground">Veli Adı</div>
+                              <div className="text-lg font-semibold text-[#D4AF37]">
+                                {studentDetails.parent.user.firstName} {studentDetails.parent.user.lastName}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium text-muted-foreground">İlişki</div>
+                              <div className="text-lg font-semibold">{studentDetails.parent.relationship}</div>
+                            </div>
+                          </div>
+                          <div className="space-y-4">
+                            <div>
+                              <div className="text-sm font-medium text-muted-foreground">Telefon Numarası</div>
+                              <div className="text-lg font-semibold">
+                                <a 
+                                  href={`tel:${studentDetails.parent.phoneNumber}`}
+                                  className="text-[#D4AF37] hover:underline flex items-center"
+                                >
+                                  📞 {studentDetails.parent.phoneNumber}
+                                </a>
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium text-muted-foreground">E-posta</div>
+                              <div className="text-lg font-semibold">
+                                <a 
+                                  href={`mailto:${studentDetails.parent.user.email}`}
+                                  className="text-[#D4AF37] hover:underline flex items-center"
+                                >
+                                  ✉️ {studentDetails.parent.user.email}
+                                </a>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="col-span-full">
+                            <div className="flex gap-2 pt-4 border-t border-[#D4AF37]/20">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => window.open(`tel:${studentDetails.parent?.phoneNumber}`, '_self')}
+                                className="border-[#D4AF37]/30 text-[#D4AF37] hover:bg-[#D4AF37]/10"
+                              >
+                                📞 Arama Yap
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => window.open(`mailto:${studentDetails.parent?.user.email}`, '_self')}
+                                className="border-[#D4AF37]/30 text-[#D4AF37] hover:bg-[#D4AF37]/10"
+                              >
+                                ✉️ E-posta Gönder
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <UserX className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
+                          <p>Bu öğrenci için veli bilgisi kayıtlı değil</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
 
                 {/* Attendance Statistics */}
                 <Card className="islamic-card border-l-4 border-l-primary">

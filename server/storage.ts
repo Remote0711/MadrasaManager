@@ -7,7 +7,7 @@ import {
   type ProgramType, type InsertProgramType, type LessonPlan, type InsertLessonPlan,
   type Progress, type InsertProgress, type Attendance, type InsertAttendance,
   type Behavior, type InsertBehavior, type StudentWithClass, type StudentWithProgress,
-  type ParentWithStudent, type TeacherAttendance, type InsertTeacherAttendance,
+  type StudentWithParent, type ParentWithStudent, type TeacherAttendance, type InsertTeacherAttendance,
   type TeacherSubjectAssignment, type InsertTeacherSubjectAssignment,
   type CurriculumItem, type InsertCurriculumItem, type StudentSubjectEnrollment,
   type InsertStudentSubjectEnrollment, type MemorizationProgress, type InsertMemorizationProgress,
@@ -38,6 +38,7 @@ export interface IStorage {
   // Student operations
   getAllStudents(): Promise<StudentWithClass[]>;
   getStudentById(id: string): Promise<StudentWithProgress | undefined>;
+  getStudentWithParent(id: string): Promise<StudentWithParent | undefined>;
   getStudentsByClassId(classId: string): Promise<StudentWithClass[]>;
   createStudent(student: InsertStudent): Promise<Student>;
   updateStudent(id: string, student: Partial<InsertStudent>): Promise<Student>;
@@ -242,6 +243,30 @@ export class DatabaseStorage implements IStorage {
   async createStudent(student: InsertStudent): Promise<Student> {
     const [newStudent] = await db.insert(students).values(student).returning();
     return newStudent;
+  }
+
+  async getStudentWithParent(id: string): Promise<StudentWithParent | undefined> {
+    const [result] = await db.select()
+      .from(students)
+      .leftJoin(classes, eq(students.classId, classes.id))
+      .leftJoin(programTypes, eq(classes.programTypeId, programTypes.id))
+      .leftJoin(parents, eq(parents.studentId, students.id))
+      .leftJoin(users, eq(parents.userId, users.id))
+      .where(eq(students.id, id));
+
+    if (!result.students) return undefined;
+
+    return {
+      ...result.students,
+      class: {
+        ...result.classes!,
+        programType: result.program_types!
+      },
+      parent: result.parents && result.users ? {
+        ...result.parents,
+        user: result.users
+      } : undefined
+    };
   }
 
   async updateStudent(id: string, student: Partial<InsertStudent>): Promise<Student> {

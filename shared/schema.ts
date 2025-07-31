@@ -479,6 +479,15 @@ export type StudentWithProgress = Student & {
   behavior: Behavior[];
 };
 
+export type StudentWithParent = Student & {
+  class: Class & {
+    programType: ProgramType;
+  };
+  parent?: Parent & {
+    user: User;
+  };
+};
+
 export type ParentWithStudent = Parent & {
   user: User;
   student: StudentWithClass;
