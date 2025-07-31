@@ -5,7 +5,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 export const roleEnum = pgEnum('role', ['ADMIN', 'TEACHER', 'PARENT']);
-export const attendanceStatusEnum = pgEnum('attendance_status', ['geldi', 'gelmedi', 'mazeretli']);
+export const attendanceStatusEnum = pgEnum('attendance_status', ['geldi', 'gelmedi', 'mazeretli', 'gec_geldi', 'erken_cikti']);
 export const subjectTypeEnum = pgEnum('subject_type', ['temel_bilgiler', 'kuran', 'ezber']);
 export const behaviorTypeEnum = pgEnum('behavior_type', ['cok_dikkatli', 'dikkatli', 'orta', 'dikkatsiz', 'cok_dikkatsiz']);
 
@@ -74,6 +74,9 @@ export const attendance = pgTable("attendance", {
   studentId: varchar("student_id").references(() => students.id).notNull(),
   week: integer("week").notNull(),
   status: attendanceStatusEnum("status").notNull(),
+  arrivalTime: text("arrival_time"), // HH:MM format for late arrivals
+  departureTime: text("departure_time"), // HH:MM format for early departures  
+  notes: text("notes"), // Additional notes about attendance
   date: timestamp("date").defaultNow().notNull(),
 });
 

@@ -82,10 +82,14 @@ export const tr = {
   // Attendance
   attendanceRate: "Devam Oranı",
   present: "Geldi",
-  absent: "Gelmedi",
+  absent: "Gelmedi", 
   excused: "Mazeretli",
+  lateArrival: "Geç Geldi",
+  earlyDeparture: "Erken Çıktı",
   attendanceMarked: "Devam durumu işaretlendi",
   attendanceMarkError: "Devam durumu işaretlenemedi",
+  departureTime: "Çıkış Saati",
+  attendanceNotes: "Devam Notları",
 
   // Parent specific
   myChild: "Çocuğum",

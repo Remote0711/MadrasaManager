@@ -363,13 +363,15 @@ export class DatabaseStorage implements IStorage {
 
   // Teacher Attendance operations
   async getTeacherAttendance(teacherId: string, date?: string): Promise<TeacherAttendance[]> {
-    let query = db.select().from(teacherAttendance).where(eq(teacherAttendance.teacherId, teacherId));
-    
     if (date) {
-      query = query.where(eq(teacherAttendance.date, date));
+      return await db.select().from(teacherAttendance)
+        .where(and(eq(teacherAttendance.teacherId, teacherId), eq(teacherAttendance.date, date)))
+        .orderBy(desc(teacherAttendance.date));
     }
     
-    return await query.orderBy(desc(teacherAttendance.date));
+    return await db.select().from(teacherAttendance)
+      .where(eq(teacherAttendance.teacherId, teacherId))
+      .orderBy(desc(teacherAttendance.date));
   }
 
   async createTeacherAttendance(attendanceData: InsertTeacherAttendance): Promise<TeacherAttendance> {
