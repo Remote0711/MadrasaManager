@@ -23,6 +23,8 @@ export default function AttendanceTracker({ students }: AttendanceTrackerProps) 
   const [arrivalTime, setArrivalTime] = useState('');
   const [departureTime, setDepartureTime] = useState('');
   const [notes, setNotes] = useState('');
+  // Track attendance status for each student to show visual feedback
+  const [studentAttendanceStatus, setStudentAttendanceStatus] = useState<Record<string, AttendanceStatus>>({});
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -39,7 +41,13 @@ export default function AttendanceTracker({ students }: AttendanceTrackerProps) 
       const response = await apiRequest("POST", "/api/teacher/attendance", data);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
+      // Update local state to show visual feedback
+      setStudentAttendanceStatus(prev => ({
+        ...prev,
+        [variables.studentId]: variables.status
+      }));
+      
       toast({
         title: tr.success,
         description: tr.attendanceMarked,
@@ -64,6 +72,12 @@ export default function AttendanceTracker({ students }: AttendanceTrackerProps) 
   const handleMarkAttendance = (studentId: string, status: AttendanceStatus) => {
     const currentWeek = Math.ceil((new Date().getTime() - new Date(2024, 8, 1).getTime()) / (1000 * 60 * 60 * 24 * 7));
     
+    // Immediately update visual state for feedback
+    setStudentAttendanceStatus(prev => ({
+      ...prev,
+      [studentId]: status
+    }));
+    
     if (status === 'gec_geldi' || status === 'erken_cikti') {
       const student = students.find(s => s.id === studentId);
       setSelectedStudent(student || null);
@@ -71,6 +85,42 @@ export default function AttendanceTracker({ students }: AttendanceTrackerProps) 
       setTimeDialogOpen(true);
     } else {
       attendanceMutation.mutate({ studentId, week: currentWeek, status });
+    }
+  };
+
+  // Helper function to get button style based on status
+  const getButtonStyle = (studentId: string, status: AttendanceStatus) => {
+    const isSelected = studentAttendanceStatus[studentId] === status;
+    const baseClasses = "flex-1 text-sm py-2 px-3 rounded-md transition-all duration-200 font-medium";
+    
+    switch (status) {
+      case 'geldi':
+        return `${baseClasses} ${isSelected 
+          ? 'bg-green-600 text-white shadow-lg border-2 border-green-700' 
+          : 'bg-green-100 text-green-700 hover:bg-green-200 border border-green-300'
+        }`;
+      case 'gec_geldi':
+        return `${baseClasses} ${isSelected 
+          ? 'bg-yellow-600 text-white shadow-lg border-2 border-yellow-700' 
+          : 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200 border border-yellow-300'
+        }`;
+      case 'erken_cikti':
+        return `${baseClasses} ${isSelected 
+          ? 'bg-orange-600 text-white shadow-lg border-2 border-orange-700' 
+          : 'bg-orange-100 text-orange-700 hover:bg-orange-200 border border-orange-300'
+        }`;
+      case 'mazeretli':
+        return `${baseClasses} ${isSelected 
+          ? 'bg-blue-600 text-white shadow-lg border-2 border-blue-700' 
+          : 'bg-blue-100 text-blue-700 hover:bg-blue-200 border border-blue-300'
+        }`;
+      case 'gelmedi':
+        return `${baseClasses} ${isSelected 
+          ? 'bg-red-600 text-white shadow-lg border-2 border-red-700' 
+          : 'bg-red-100 text-red-700 hover:bg-red-200 border border-red-300'
+        }`;
+      default:
+        return baseClasses;
     }
   };
 
@@ -103,52 +153,42 @@ export default function AttendanceTracker({ students }: AttendanceTrackerProps) 
                 {student.firstName} {student.lastName}
               </span>
             </div>
-            <div className="flex space-x-1">
-              <Button
-                size="sm"
-                variant="outline"
-                className="bg-green-50 text-green-800 border-green-200 hover:bg-green-100"
+            <div className="flex gap-1">
+              <button
+                className={getButtonStyle(student.id, 'geldi')}
                 onClick={() => handleMarkAttendance(student.id, 'geldi')}
                 disabled={attendanceMutation.isPending}
               >
-                {tr.present}
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="bg-orange-50 text-orange-800 border-orange-200 hover:bg-orange-100"
+                ✓ {tr.present}
+              </button>
+              <button
+                className={getButtonStyle(student.id, 'gec_geldi')}
                 onClick={() => handleMarkAttendance(student.id, 'gec_geldi')}
                 disabled={attendanceMutation.isPending}
               >
-                {tr.lateArrival}
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="bg-yellow-50 text-yellow-800 border-yellow-200 hover:bg-yellow-100"
+                ⏰ {tr.lateArrival}
+              </button>
+              <button
+                className={getButtonStyle(student.id, 'erken_cikti')}
                 onClick={() => handleMarkAttendance(student.id, 'erken_cikti')}
                 disabled={attendanceMutation.isPending}
               >
-                {tr.earlyDeparture}
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="bg-blue-50 text-blue-800 border-blue-200 hover:bg-blue-100"
+                ⏰ {tr.earlyDeparture}
+              </button>
+              <button
+                className={getButtonStyle(student.id, 'mazeretli')}
                 onClick={() => handleMarkAttendance(student.id, 'mazeretli')}
                 disabled={attendanceMutation.isPending}
               >
-                {tr.excused}
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="bg-red-50 text-red-800 border-red-200 hover:bg-red-100"
+                📋 {tr.excused}
+              </button>
+              <button
+                className={getButtonStyle(student.id, 'gelmedi')}
                 onClick={() => handleMarkAttendance(student.id, 'gelmedi')}
                 disabled={attendanceMutation.isPending}
               >
-                {tr.absent}
-              </Button>
+                ✗ {tr.absent}
+              </button>
             </div>
           </div>
         ))}

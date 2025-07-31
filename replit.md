@@ -64,6 +64,7 @@ Preferred communication style: Simple, everyday language.
 - **Enhanced Attendance Features**: Added late arrival and early departure options with time tracking and notes
 - **Streamlined Attendance Interface**: Removed card-based boxes and simplified to clean list format per user request
 - **Added Parent Contact Information**: Teachers can now view parent contact details in student profiles for emergency communication
+- **Added Visual Feedback to Attendance**: Buttons now show clicked state with colors and remain locked to indicate selection
 - **Database Schema Updates**: Added arrival_time, departure_time, and notes fields to attendance table, plus StudentWithParent type
 - **Comprehensive Testing**: Successfully tested all attendance statuses (geldi, gec_geldi, erken_cikti, mazeretli, gelmedi)
 
