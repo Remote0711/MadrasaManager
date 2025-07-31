@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import session from 'express-session';
 import { storage } from "./storage";
 import { authenticateUser, hashPassword, requireAuth, requireRole, type AuthUser } from "./auth";
-import { insertUserSchema, insertStudentSchema, insertProgressSchema, insertAttendanceSchema, insertBehaviorSchema, insertLessonPlanSchema } from "@shared/schema";
+import { insertUserSchema, insertStudentSchema, insertProgressSchema, insertAttendanceSchema, insertBehaviorSchema, insertLessonPlanSchema, insertTeacherAttendanceSchema, insertTeacherSubjectAssignmentSchema, insertCurriculumItemSchema, insertStudentSubjectEnrollmentSchema, insertMemorizationProgressSchema } from "@shared/schema";
 
 declare module 'express-session' {
   interface SessionData {
@@ -494,6 +494,239 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(extendedStats);
     } catch (error) {
       res.status(403).json({ message: (error as Error).message });
+    }
+  });
+
+  // Enhanced functionality endpoints
+
+  // Teacher Attendance Management
+  app.get('/api/admin/teacher-attendance', async (req, res) => {
+    try {
+      requireRole(req.session.user || null, ['ADMIN']);
+      const { teacherId, date } = req.query;
+      
+      if (teacherId) {
+        const attendance = await storage.getTeacherAttendance(teacherId as string, date as string);
+        res.json(attendance);
+      } else {
+        const todayAttendance = await storage.getTodayTeacherAttendance();
+        res.json(todayAttendance);
+      }
+    } catch (error) {
+      res.status(403).json({ message: (error as Error).message });
+    }
+  });
+
+  app.post('/api/admin/teacher-attendance', async (req, res) => {
+    try {
+      requireRole(req.session.user || null, ['ADMIN']);
+      const attendanceData = insertTeacherAttendanceSchema.parse(req.body);
+      const attendance = await storage.createTeacherAttendance(attendanceData);
+      res.json(attendance);
+    } catch (error) {
+      res.status(400).json({ message: (error as Error).message });
+    }
+  });
+
+  app.put('/api/admin/teacher-attendance/:id', async (req, res) => {
+    try {
+      requireRole(req.session.user || null, ['ADMIN']);
+      const { id } = req.params;
+      const attendanceData = req.body;
+      const attendance = await storage.updateTeacherAttendance(id, attendanceData);
+      res.json(attendance);
+    } catch (error) {
+      res.status(400).json({ message: (error as Error).message });
+    }
+  });
+
+  // Teacher Subject Assignments
+  app.get('/api/admin/teacher-assignments', async (req, res) => {
+    try {
+      requireRole(req.session.user || null, ['ADMIN']);
+      const { teacherId } = req.query;
+      
+      if (teacherId) {
+        const assignments = await storage.getTeacherAssignments(teacherId as string);
+        res.json(assignments);
+      } else {
+        const teachersWithAssignments = await storage.getTeachersWithAssignments();
+        res.json(teachersWithAssignments);
+      }
+    } catch (error) {
+      res.status(403).json({ message: (error as Error).message });
+    }
+  });
+
+  app.post('/api/admin/teacher-assignments', async (req, res) => {
+    try {
+      requireRole(req.session.user || null, ['ADMIN']);
+      const assignmentData = insertTeacherSubjectAssignmentSchema.parse(req.body);
+      const assignment = await storage.createTeacherAssignment(assignmentData);
+      res.json(assignment);
+    } catch (error) {
+      res.status(400).json({ message: (error as Error).message });
+    }
+  });
+
+  app.delete('/api/admin/teacher-assignments/:id', async (req, res) => {
+    try {
+      requireRole(req.session.user || null, ['ADMIN']);
+      const { id } = req.params;
+      await storage.deleteTeacherAssignment(id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(400).json({ message: (error as Error).message });
+    }
+  });
+
+  // Curriculum Management
+  app.get('/api/admin/curriculum', async (req, res) => {
+    try {
+      requireRole(req.session.user || null, ['ADMIN', 'TEACHER']);
+      const { programTypeId, classLevel } = req.query;
+      const curriculumItems = await storage.getCurriculumItems(
+        programTypeId as string, 
+        classLevel ? Number(classLevel) : undefined
+      );
+      res.json(curriculumItems);
+    } catch (error) {
+      res.status(403).json({ message: (error as Error).message });
+    }
+  });
+
+  app.post('/api/admin/curriculum', async (req, res) => {
+    try {
+      requireRole(req.session.user || null, ['ADMIN']);
+      const curriculumData = insertCurriculumItemSchema.parse(req.body);
+      const item = await storage.createCurriculumItem(curriculumData);
+      res.json(item);
+    } catch (error) {
+      res.status(400).json({ message: (error as Error).message });
+    }
+  });
+
+  app.put('/api/admin/curriculum/:id', async (req, res) => {
+    try {
+      requireRole(req.session.user || null, ['ADMIN']);
+      const { id } = req.params;
+      const curriculumData = req.body;
+      const item = await storage.updateCurriculumItem(id, curriculumData);
+      res.json(item);
+    } catch (error) {
+      res.status(400).json({ message: (error as Error).message });
+    }
+  });
+
+  // Student Subject Enrollments
+  app.get('/api/admin/student-enrollments', async (req, res) => {
+    try {
+      requireRole(req.session.user || null, ['ADMIN', 'TEACHER']);
+      const { studentId, classId } = req.query;
+      
+      if (studentId) {
+        const enrollments = await storage.getStudentEnrollments(studentId as string);
+        res.json(enrollments);
+      } else {
+        const studentsWithEnrollments = await storage.getStudentsWithEnrollments(classId as string);
+        res.json(studentsWithEnrollments);
+      }
+    } catch (error) {
+      res.status(403).json({ message: (error as Error).message });
+    }
+  });
+
+  app.post('/api/admin/student-enrollments', async (req, res) => {
+    try {
+      requireRole(req.session.user || null, ['ADMIN']);
+      const enrollmentData = insertStudentSubjectEnrollmentSchema.parse(req.body);
+      const enrollment = await storage.createStudentEnrollment(enrollmentData);
+      res.json(enrollment);
+    } catch (error) {
+      res.status(400).json({ message: (error as Error).message });
+    }
+  });
+
+  app.delete('/api/admin/student-enrollments/:id', async (req, res) => {
+    try {
+      requireRole(req.session.user || null, ['ADMIN']);
+      const { id } = req.params;
+      await storage.deleteStudentEnrollment(id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(400).json({ message: (error as Error).message });
+    }
+  });
+
+  // Enhanced Memorization (Ezber) Tracking
+  app.get('/api/teacher/memorization/:studentId', async (req, res) => {
+    try {
+      requireRole(req.session.user || null, ['TEACHER', 'ADMIN']);
+      const { studentId } = req.params;
+      const { week } = req.query;
+      const progress = await storage.getMemorizationProgress(
+        studentId, 
+        week ? Number(week) : undefined
+      );
+      res.json(progress);
+    } catch (error) {
+      res.status(403).json({ message: (error as Error).message });
+    }
+  });
+
+  app.post('/api/teacher/memorization', async (req, res) => {
+    try {
+      requireRole(req.session.user || null, ['TEACHER', 'ADMIN']);
+      const progressData = insertMemorizationProgressSchema.parse(req.body);
+      const progress = await storage.createMemorizationProgress(progressData);
+      res.json(progress);
+    } catch (error) {
+      res.status(400).json({ message: (error as Error).message });
+    }
+  });
+
+  app.put('/api/teacher/memorization/:id', async (req, res) => {
+    try {
+      requireRole(req.session.user || null, ['TEACHER', 'ADMIN']);
+      const { id } = req.params;
+      const progressData = req.body;
+      const progress = await storage.updateMemorizationProgress(id, progressData);
+      res.json(progress);
+    } catch (error) {
+      res.status(400).json({ message: (error as Error).message });
+    }
+  });
+
+  // Enhanced Student Registration with Subject Enrollment
+  app.post('/api/admin/students/register', async (req, res) => {
+    try {
+      requireRole(req.session.user || null, ['ADMIN']);
+      const { studentData, subjectEnrollments, parentData } = req.body;
+      
+      // Create student
+      const student = await storage.createStudent(studentData);
+      
+      // Create parent if provided
+      if (parentData) {
+        const parent = await storage.createParent({
+          ...parentData,
+          studentId: student.id
+        });
+      }
+      
+      // Create subject enrollments
+      if (subjectEnrollments && subjectEnrollments.length > 0) {
+        for (const enrollment of subjectEnrollments) {
+          await storage.createStudentEnrollment({
+            ...enrollment,
+            studentId: student.id
+          });
+        }
+      }
+      
+      res.json({ student, message: 'Öğrenci başarıyla kaydedildi' });
+    } catch (error) {
+      res.status(400).json({ message: (error as Error).message });
     }
   });
 

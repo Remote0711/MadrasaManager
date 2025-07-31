@@ -124,14 +124,76 @@ export const studentEvaluations = pgTable("student_evaluations", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// New tables for enhanced functionality
+export const teacherAttendance = pgTable("teacher_attendance", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  teacherId: varchar("teacher_id").references(() => users.id).notNull(),
+  date: date("date").notNull(),
+  arrivalTime: text("arrival_time"), // HH:MM format
+  status: text("status").notNull().default('present'), // present, absent, late
+  sessionId: varchar("session_id"), // Optional: link to specific lesson session
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const teacherSubjectAssignments = pgTable("teacher_subject_assignments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  teacherId: varchar("teacher_id").references(() => users.id).notNull(),
+  classId: varchar("class_id").references(() => classes.id).notNull(),
+  subject: subjectTypeEnum("subject").notNull(),
+  assignedAt: timestamp("assigned_at").defaultNow().notNull(),
+});
+
+export const curriculumItems = pgTable("curriculum_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  programTypeId: varchar("program_type_id").references(() => programTypes.id).notNull(),
+  subject: subjectTypeEnum("subject").notNull(),
+  classLevel: integer("class_level").notNull(),
+  title: text("title").notNull(), // e.g., "Abdest Alması", "Fatiha Suresi"
+  description: text("description"),
+  weekNumber: integer("week_number"),
+  order: integer("order").notNull(), // For sequencing
+  isOptional: boolean("is_optional").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const studentSubjectEnrollments = pgTable("student_subject_enrollments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  studentId: varchar("student_id").references(() => students.id).notNull(),
+  classId: varchar("class_id").references(() => classes.id).notNull(),
+  subject: subjectTypeEnum("subject").notNull(),
+  teacherId: varchar("teacher_id").references(() => users.id),
+  enrolledAt: timestamp("enrolled_at").defaultNow().notNull(),
+});
+
+// Enhanced memorization tracking
+export const memorizationProgress = pgTable("memorization_progress", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  studentId: varchar("student_id").references(() => students.id).notNull(),
+  surahName: text("surah_name").notNull(),
+  ayahStart: integer("ayah_start").notNull(),
+  ayahEnd: integer("ayah_end").notNull(),
+  completionStatus: text("completion_status").notNull().default('in_progress'), // completed, in_progress, needs_review
+  lastReviewDate: date("last_review_date"),
+  qualityScore: integer("quality_score"), // 1-10 scale for memorization quality
+  teacherNotes: text("teacher_notes"),
+  week: integer("week").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   parents: many(parents),
+  teacherAttendance: many(teacherAttendance),
+  teacherSubjectAssignments: many(teacherSubjectAssignments),
+  studentSubjectEnrollments: many(studentSubjectEnrollments),
 }));
 
 export const programTypesRelations = relations(programTypes, ({ many }) => ({
   classes: many(classes),
   lessonPlans: many(lessonPlans),
+  curriculumItems: many(curriculumItems),
 }));
 
 export const classesRelations = relations(classes, ({ one, many }) => ({
@@ -140,6 +202,9 @@ export const classesRelations = relations(classes, ({ one, many }) => ({
     references: [programTypes.id],
   }),
   students: many(students),
+  weeklyLessonPlans: many(weeklyLessonPlans),
+  teacherSubjectAssignments: many(teacherSubjectAssignments),
+  studentSubjectEnrollments: many(studentSubjectEnrollments),
 }));
 
 export const studentsRelations = relations(students, ({ one, many }) => ({
@@ -153,6 +218,8 @@ export const studentsRelations = relations(students, ({ one, many }) => ({
   behavior: many(behavior),
   subjectProgress: many(subjectProgress),
   evaluations: many(studentEvaluations),
+  subjectEnrollments: many(studentSubjectEnrollments),
+  memorizationProgress: many(memorizationProgress),
 }));
 
 export const parentsRelations = relations(parents, ({ one }) => ({
@@ -215,6 +282,56 @@ export const studentEvaluationsRelations = relations(studentEvaluations, ({ one 
   }),
 }));
 
+// New relations
+export const teacherAttendanceRelations = relations(teacherAttendance, ({ one }) => ({
+  teacher: one(users, {
+    fields: [teacherAttendance.teacherId],
+    references: [users.id],
+  }),
+}));
+
+export const teacherSubjectAssignmentsRelations = relations(teacherSubjectAssignments, ({ one }) => ({
+  teacher: one(users, {
+    fields: [teacherSubjectAssignments.teacherId],
+    references: [users.id],
+  }),
+  class: one(classes, {
+    fields: [teacherSubjectAssignments.classId],
+    references: [classes.id],
+  }),
+}));
+
+export const curriculumItemsRelations = relations(curriculumItems, ({ one }) => ({
+  programType: one(programTypes, {
+    fields: [curriculumItems.programTypeId],
+    references: [programTypes.id],
+  }),
+}));
+
+export const studentSubjectEnrollmentsRelations = relations(studentSubjectEnrollments, ({ one }) => ({
+  student: one(students, {
+    fields: [studentSubjectEnrollments.studentId],
+    references: [students.id],
+  }),
+  class: one(classes, {
+    fields: [studentSubjectEnrollments.classId],
+    references: [classes.id],
+  }),
+  teacher: one(users, {
+    fields: [studentSubjectEnrollments.teacherId],
+    references: [users.id],
+  }),
+}));
+
+export const memorizationProgressRelations = relations(memorizationProgress, ({ one }) => ({
+  student: one(students, {
+    fields: [memorizationProgress.studentId],
+    references: [students.id],
+  }),
+}));
+
+
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -275,6 +392,32 @@ export const insertStudentEvaluationSchema = createInsertSchema(studentEvaluatio
   updatedAt: true,
 });
 
+export const insertTeacherAttendanceSchema = createInsertSchema(teacherAttendance).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertTeacherSubjectAssignmentSchema = createInsertSchema(teacherSubjectAssignments).omit({
+  id: true,
+  assignedAt: true,
+});
+
+export const insertCurriculumItemSchema = createInsertSchema(curriculumItems).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertStudentSubjectEnrollmentSchema = createInsertSchema(studentSubjectEnrollments).omit({
+  id: true,
+  enrolledAt: true,
+});
+
+export const insertMemorizationProgressSchema = createInsertSchema(memorizationProgress).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -304,6 +447,21 @@ export type InsertSubjectProgress = z.infer<typeof insertSubjectProgressSchema>;
 export type StudentEvaluation = typeof studentEvaluations.$inferSelect;
 export type InsertStudentEvaluation = z.infer<typeof insertStudentEvaluationSchema>;
 
+export type TeacherAttendance = typeof teacherAttendance.$inferSelect;
+export type InsertTeacherAttendance = z.infer<typeof insertTeacherAttendanceSchema>;
+
+export type TeacherSubjectAssignment = typeof teacherSubjectAssignments.$inferSelect;
+export type InsertTeacherSubjectAssignment = z.infer<typeof insertTeacherSubjectAssignmentSchema>;
+
+export type CurriculumItem = typeof curriculumItems.$inferSelect;
+export type InsertCurriculumItem = z.infer<typeof insertCurriculumItemSchema>;
+
+export type StudentSubjectEnrollment = typeof studentSubjectEnrollments.$inferSelect;
+export type InsertStudentSubjectEnrollment = z.infer<typeof insertStudentSubjectEnrollmentSchema>;
+
+export type MemorizationProgress = typeof memorizationProgress.$inferSelect;
+export type InsertMemorizationProgress = z.infer<typeof insertMemorizationProgressSchema>;
+
 // Extended types for UI
 export type StudentWithClass = Student & {
   class: Class & {
@@ -321,4 +479,24 @@ export type StudentWithProgress = Student & {
 export type ParentWithStudent = Parent & {
   user: User;
   student: StudentWithClass;
+};
+
+// New extended types
+export type TeacherWithAssignments = User & {
+  teacherSubjectAssignments: (TeacherSubjectAssignment & {
+    class: Class & { programType: ProgramType };
+  })[];
+  teacherAttendance: TeacherAttendance[];
+};
+
+export type StudentWithEnrollments = Student & {
+  class: Class & { programType: ProgramType };
+  subjectEnrollments: (StudentSubjectEnrollment & {
+    teacher: User;
+  })[];
+  memorizationProgress: MemorizationProgress[];
+};
+
+export type CurriculumItemWithDetails = CurriculumItem & {
+  programType: ProgramType;
 };

@@ -12,6 +12,8 @@ import AdminStudents from "@/pages/dashboard/admin/students";
 import AdminClasses from "@/pages/dashboard/admin/classes";
 import AdminLessonPlans from "@/pages/dashboard/admin/lesson-plans";
 import AdminStatistics from "@/pages/dashboard/admin/statistics";
+import TeacherManagement from '@/pages/dashboard/admin/teacher-management';
+import StudentRegistration from '@/pages/dashboard/admin/student-registration';
 import StudentProfile from "@/pages/dashboard/admin/student-profile";
 import TeacherDashboard from "@/pages/dashboard/teacher";
 import TeacherStudents from "@/pages/dashboard/teacher/students";
@@ -79,6 +81,18 @@ function AppContent() {
       <Route path="/dashboard/admin/statistics">
         <ProtectedRoute allowedRoles={['ADMIN']} user={auth?.user}>
           <AdminStatistics />
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/dashboard/admin/teacher-management">
+        <ProtectedRoute allowedRoles={['ADMIN']} user={auth?.user}>
+          <TeacherManagement />
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/dashboard/admin/student-registration">
+        <ProtectedRoute allowedRoles={['ADMIN']} user={auth?.user}>
+          <StudentRegistration />
         </ProtectedRoute>
       </Route>
 

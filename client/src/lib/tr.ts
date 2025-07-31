@@ -173,7 +173,49 @@ export const tr = {
   // Management pages
   userManagement: "Kullanıcı Yönetimi",
   studentManagement: "Öğrenci Yönetimi",
+  teacherManagement: "Öğretmen Yönetimi",
+  curriculumManagement: "Müfredat Yönetimi",
+  
+  // Teacher Registration & Monitoring
+  teacherRegistration: "Öğretmen Kayıt",
+  teacherMonitoring: "Öğretmen Takip",
+  teacherAttendance: "Öğretmen Devamı",
+  arrivalTime: "Geliş Saati",
+  attendanceStatus: "Devam Durumu",
+  sessionNotes: "Ders Notları",
+  
+  // Subject assignments
+  teacherAssignments: "Öğretmen Atamaları",
+  subjectAssignment: "Ders Atamasi",
+  assignTeacher: "Öğretmen Ata",
+  unassignTeacher: "Öğretmen Atamayı Kaldır",
+  assignedTeacher: "Atanan Öğretmen",
+  
+  // Enhanced Student Registration
+  studentRegistration: "Öğrenci Kayıt",
+  parentInformation: "Veli Bilgileri",
+  subjectEnrollment: "Ders Kayıtları",
+  enrollInSubjects: "Derslere Kaydet",
+  selectSubjects: "Ders Seçimi",
+  dateOfBirth: "Doğum Tarihi",
+  
+  // Memorization tracking
+  memorizationProgress: "Ezber İlerlemesi",
+  surahName: "Sure Adı",
+  ayahRange: "Ayet Aralığı",
+  ayahStart: "Başlangıç Ayeti",
+  ayahEnd: "Bitiş Ayeti",
+  completionStatus: "Tamamlama Durumu",
+  inProgress: "Devam Ediyor",
+  needsReview: "Tekrar Gerekiyor",
+  lastReviewDate: "Son Tekrar Tarihi",
+  qualityScore: "Kalite Puanı",
   userList: "Kullanıcı Listesi",
+  
+  // Add common missing translations  
+  loading: "Yükleniyor...",
+  teacher: "Öğretmen",
+  actions: "İşlemler",
   studentList: "Öğrenci Listesi",
   searchUser: "Kullanıcı ara...",
   searchStudent: "Öğrenci ara...",
