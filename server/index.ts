@@ -1,7 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { seedDatabase } from "./seed";
 
 const app = express();
 app.use(express.json());
@@ -39,15 +38,6 @@ app.use((req, res, next) => {
 
 (async () => {
   const server = await registerRoutes(app);
-
-  // Run database seed on startup in development
-  if (app.get("env") === "development") {
-    try {
-      await seedDatabase();
-    } catch (error) {
-      console.log("Seed already run or failed:", error instanceof Error ? error.message : "Unknown error");
-    }
-  }
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

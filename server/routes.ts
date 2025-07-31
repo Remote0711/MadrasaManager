@@ -22,6 +22,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   }));
 
+  // Health check endpoint for deployment
+  app.get('/', (req, res) => {
+    res.json({ 
+      status: 'healthy', 
+      message: 'Islamic School Management System is running',
+      timestamp: new Date().toISOString()
+    });
+  });
+
   // Authentication routes
   app.post('/api/auth/login', async (req, res) => {
     try {

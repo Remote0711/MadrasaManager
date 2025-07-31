@@ -5,42 +5,106 @@ async function seedDatabase() {
   console.log('Veritabanı seed işlemi başlatılıyor...');
 
   try {
-    // Program türlerini oluştur
-    const programTypes = await Promise.all([
-      storage.createProgramType({ name: 'Haftasonu', description: 'Hafta sonu programı' }),
-      storage.createProgramType({ name: 'Yatılı', description: 'Yatılı program' }),
-      storage.createProgramType({ name: 'Yetişkin', description: 'Yetişkin eğitim programı' })
-    ]);
+    // Program türlerini oluştur - duplicate check
+    const programTypeData = [
+      { name: 'Haftasonu', description: 'Hafta sonu programı' },
+      { name: 'Yatılı', description: 'Yatılı program' },
+      { name: 'Yetişkin', description: 'Yetişkin eğitim programı' }
+    ];
 
-    // Sınıfları oluştur
-    const classes = await Promise.all([
-      storage.createClass({ name: 'T1a', level: 1, programTypeId: programTypes[0].id }),
-      storage.createClass({ name: 'T1b', level: 1, programTypeId: programTypes[0].id }),
-      storage.createClass({ name: 'T2a', level: 2, programTypeId: programTypes[0].id }),
-      storage.createClass({ name: 'T2b', level: 2, programTypeId: programTypes[1].id }),
-      storage.createClass({ name: 'T3a', level: 3, programTypeId: programTypes[1].id }),
-      storage.createClass({ name: 'T3b', level: 3, programTypeId: programTypes[2].id })
-    ]);
+    const programTypes = [];
+    for (const data of programTypeData) {
+      try {
+        const existing = await storage.getProgramTypeByName(data.name);
+        if (existing) {
+          console.log(`Program türü zaten mevcut: ${data.name}`);
+          programTypes.push(existing);
+        } else {
+          const created = await storage.createProgramType(data);
+          programTypes.push(created);
+        }
+      } catch (error) {
+        // If it fails due to unique constraint, try to get existing one
+        const existing = await storage.getProgramTypeByName(data.name);
+        if (existing) {
+          programTypes.push(existing);
+        } else {
+          throw error;
+        }
+      }
+    }
 
-    // Kullanıcıları oluştur (2 admin, 3 öğretmen, 6 veli)
+    // Sınıfları oluştur - duplicate check
+    const classData = [
+      { name: 'T1a', level: 1, programTypeId: programTypes[0].id },
+      { name: 'T1b', level: 1, programTypeId: programTypes[0].id },
+      { name: 'T2a', level: 2, programTypeId: programTypes[0].id },
+      { name: 'T2b', level: 2, programTypeId: programTypes[1].id },
+      { name: 'T3a', level: 3, programTypeId: programTypes[1].id },
+      { name: 'T3b', level: 3, programTypeId: programTypes[2].id }
+    ];
+
+    const classes = [];
+    for (const data of classData) {
+      try {
+        const existing = await storage.getClassByName(data.name);
+        if (existing) {
+          console.log(`Sınıf zaten mevcut: ${data.name}`);
+          classes.push(existing);
+        } else {
+          const created = await storage.createClass(data);
+          classes.push(created);
+        }
+      } catch (error) {
+        // If it fails due to unique constraint, try to get existing one
+        const existing = await storage.getClassByName(data.name);
+        if (existing) {
+          classes.push(existing);
+        } else {
+          throw error;
+        }
+      }
+    }
+
+    // Kullanıcıları oluştur (2 admin, 3 öğretmen, 3 veli) - duplicate check
     const hashedPassword = await hashPassword('123456');
     
-    const admins = await Promise.all([
-      storage.createUser({ name: 'Ahmet Yılmaz', username: 'admin', email: 'admin@example.com', password: hashedPassword, role: 'ADMIN' }),
-      storage.createUser({ name: 'Mehmet Özkan', username: 'admin2', email: 'admin2@example.com', password: hashedPassword, role: 'ADMIN' })
-    ]);
+    const userData = [
+      { name: 'Ahmet Yılmaz', username: 'admin', email: 'admin@example.com', password: hashedPassword, role: 'ADMIN' as const },
+      { name: 'Mehmet Özkan', username: 'admin2', email: 'admin2@example.com', password: hashedPassword, role: 'ADMIN' as const },
+      { name: 'Fatma Özkan', username: 'ogretmen', email: 'ogretmen@example.com', password: hashedPassword, role: 'TEACHER' as const },
+      { name: 'Ayşe Demir', username: 'ogretmen2', email: 'ogretmen2@example.com', password: hashedPassword, role: 'TEACHER' as const },
+      { name: 'Zeynep Kaya', username: 'ogretmen3', email: 'ogretmen3@example.com', password: hashedPassword, role: 'TEACHER' as const },
+      { name: 'Emine Yıldız', username: 'veli', email: 'veli@example.com', password: hashedPassword, role: 'PARENT' as const },
+      { name: 'Hatice Şahin', username: 'veli2', email: 'veli2@example.com', password: hashedPassword, role: 'PARENT' as const },
+      { name: 'Meryem Çelik', username: 'veli3', email: 'veli3@example.com', password: hashedPassword, role: 'PARENT' as const }
+    ];
 
-    const teachers = await Promise.all([
-      storage.createUser({ name: 'Fatma Özkan', username: 'ogretmen', email: 'ogretmen@example.com', password: hashedPassword, role: 'TEACHER' }),
-      storage.createUser({ name: 'Ayşe Demir', username: 'ogretmen2', email: 'ogretmen2@example.com', password: hashedPassword, role: 'TEACHER' }),
-      storage.createUser({ name: 'Zeynep Kaya', username: 'ogretmen3', email: 'ogretmen3@example.com', password: hashedPassword, role: 'TEACHER' })
-    ]);
+    const users = [];
+    for (const data of userData) {
+      try {
+        const existing = await storage.getUserByUsername(data.username);
+        if (existing) {
+          console.log(`Kullanıcı zaten mevcut: ${data.username}`);
+          users.push(existing);
+        } else {
+          const created = await storage.createUser(data);
+          users.push(created);
+        }
+      } catch (error) {
+        // If it fails due to unique constraint, try to get existing one
+        const existing = await storage.getUserByUsername(data.username);
+        if (existing) {
+          users.push(existing);
+        } else {
+          throw error;
+        }
+      }
+    }
 
-    const parentUsers = await Promise.all([
-      storage.createUser({ name: 'Emine Yıldız', username: 'veli', email: 'veli@example.com', password: hashedPassword, role: 'PARENT' }),
-      storage.createUser({ name: 'Hatice Şahin', username: 'veli2', email: 'veli2@example.com', password: hashedPassword, role: 'PARENT' }),
-      storage.createUser({ name: 'Meryem Çelik', username: 'veli3', email: 'veli3@example.com', password: hashedPassword, role: 'PARENT' })
-    ]);
+    const admins = users.filter(u => u.role === 'ADMIN');
+    const teachers = users.filter(u => u.role === 'TEACHER');
+    const parentUsers = users.filter(u => u.role === 'PARENT');
 
     // Öğrencileri oluştur (her sınıfta 3 öğrenci - easier to review)
     const studentNames = [
@@ -145,9 +209,17 @@ async function seedDatabase() {
   }
 }
 
-// Bu dosya doğrudan çalıştırılırsa seed işlemini başlat
-if (import.meta.url === `file://${process.argv[1]}`) {
-  seedDatabase().then(() => process.exit(0));
-}
-
 export { seedDatabase };
+
+// Run the seed function if this file is executed directly
+if (import.meta.url === `file://${process.argv[1]}`) {
+  seedDatabase()
+    .then(() => {
+      console.log('Seed script completed successfully!');
+      process.exit(0);
+    })
+    .catch((error) => {
+      console.error('Seed script failed:', error);
+      process.exit(1);
+    });
+}

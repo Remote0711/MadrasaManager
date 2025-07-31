@@ -27,11 +27,13 @@ export interface IStorage {
 
   // Program Type operations
   getAllProgramTypes(): Promise<ProgramType[]>;
+  getProgramTypeByName(name: string): Promise<ProgramType | undefined>;
   createProgramType(programType: InsertProgramType): Promise<ProgramType>;
 
   // Class operations
   getAllClasses(): Promise<Class[]>;
   getClassById(id: string): Promise<Class | undefined>;
+  getClassByName(name: string): Promise<Class | undefined>;
   createClass(classData: InsertClass): Promise<Class>;
   updateClass(id: string, classData: Partial<InsertClass>): Promise<Class>;
 
@@ -132,6 +134,11 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(programTypes);
   }
 
+  async getProgramTypeByName(name: string): Promise<ProgramType | undefined> {
+    const [programType] = await db.select().from(programTypes).where(eq(programTypes.name, name));
+    return programType || undefined;
+  }
+
   async createProgramType(programType: InsertProgramType): Promise<ProgramType> {
     const [newProgramType] = await db.insert(programTypes).values(programType).returning();
     return newProgramType;
@@ -176,6 +183,11 @@ export class DatabaseStorage implements IStorage {
 
   async getClassById(id: string): Promise<Class | undefined> {
     const [classData] = await db.select().from(classes).where(eq(classes.id, id));
+    return classData || undefined;
+  }
+
+  async getClassByName(name: string): Promise<Class | undefined> {
+    const [classData] = await db.select().from(classes).where(eq(classes.name, name));
     return classData || undefined;
   }
 
@@ -464,7 +476,7 @@ export class DatabaseStorage implements IStorage {
       
       if (row.teacher_subject_assignments && row.classes && row.program_types) {
         const existingAssignment = teacher.teacherSubjectAssignments.find(
-          a => a.id === row.teacher_subject_assignments.id
+          a => a.id === row.teacher_subject_assignments!.id
         );
         if (!existingAssignment) {
           teacher.teacherSubjectAssignments.push({
@@ -479,7 +491,7 @@ export class DatabaseStorage implements IStorage {
       
       if (row.teacher_attendance) {
         const existingAttendance = teacher.teacherAttendance.find(
-          a => a.id === row.teacher_attendance.id
+          a => a.id === row.teacher_attendance!.id
         );
         if (!existingAttendance) {
           teacher.teacherAttendance.push(row.teacher_attendance);
@@ -494,15 +506,24 @@ export class DatabaseStorage implements IStorage {
   async getCurriculumItems(programTypeId?: string, classLevel?: number): Promise<CurriculumItem[]> {
     let query = db.select().from(curriculumItems);
     
-    if (programTypeId) {
-      query = query.where(eq(curriculumItems.programTypeId, programTypeId));
+    if (programTypeId && classLevel) {
+      return await db.select().from(curriculumItems)
+        .where(and(
+          eq(curriculumItems.programTypeId, programTypeId),
+          eq(curriculumItems.classLevel, classLevel)
+        ))
+        .orderBy(curriculumItems.order);
+    } else if (programTypeId) {
+      return await db.select().from(curriculumItems)
+        .where(eq(curriculumItems.programTypeId, programTypeId))
+        .orderBy(curriculumItems.order);
+    } else if (classLevel) {
+      return await db.select().from(curriculumItems)
+        .where(eq(curriculumItems.classLevel, classLevel))
+        .orderBy(curriculumItems.order);
     }
     
-    if (classLevel) {
-      query = query.where(eq(curriculumItems.classLevel, classLevel));
-    }
-    
-    return await query.orderBy(curriculumItems.order);
+    return await db.select().from(curriculumItems).orderBy(curriculumItems.order);
   }
 
   async createCurriculumItem(curriculumData: InsertCurriculumItem): Promise<CurriculumItem> {
@@ -537,20 +558,24 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getStudentsWithEnrollments(classId?: string): Promise<StudentWithEnrollments[]> {
-    let query = db
-      .select()
-      .from(students)
-      .leftJoin(classes, eq(students.classId, classes.id))
-      .leftJoin(programTypes, eq(classes.programTypeId, programTypes.id))
-      .leftJoin(studentSubjectEnrollments, eq(students.id, studentSubjectEnrollments.studentId))
-      .leftJoin(users, eq(studentSubjectEnrollments.teacherId, users.id))
-      .leftJoin(memorizationProgress, eq(students.id, memorizationProgress.studentId));
-
-    if (classId) {
-      query = query.where(eq(students.classId, classId));
-    }
-
-    const studentsData = await query;
+    const studentsData = classId
+      ? await db
+          .select()
+          .from(students)
+          .leftJoin(classes, eq(students.classId, classes.id))
+          .leftJoin(programTypes, eq(classes.programTypeId, programTypes.id))
+          .leftJoin(studentSubjectEnrollments, eq(students.id, studentSubjectEnrollments.studentId))
+          .leftJoin(users, eq(studentSubjectEnrollments.teacherId, users.id))
+          .leftJoin(memorizationProgress, eq(students.id, memorizationProgress.studentId))
+          .where(eq(students.classId, classId))
+      : await db
+          .select()
+          .from(students)
+          .leftJoin(classes, eq(students.classId, classes.id))
+          .leftJoin(programTypes, eq(classes.programTypeId, programTypes.id))
+          .leftJoin(studentSubjectEnrollments, eq(students.id, studentSubjectEnrollments.studentId))
+          .leftJoin(users, eq(studentSubjectEnrollments.teacherId, users.id))
+          .leftJoin(memorizationProgress, eq(students.id, memorizationProgress.studentId));
 
     // Group by student
     const studentMap = new Map<string, StudentWithEnrollments>();
@@ -572,7 +597,7 @@ export class DatabaseStorage implements IStorage {
       
       if (row.student_subject_enrollments && row.users) {
         const existingEnrollment = student.subjectEnrollments.find(
-          e => e.id === row.student_subject_enrollments.id
+          e => e.id === row.student_subject_enrollments!.id
         );
         if (!existingEnrollment) {
           student.subjectEnrollments.push({
@@ -584,7 +609,7 @@ export class DatabaseStorage implements IStorage {
       
       if (row.memorization_progress) {
         const existing = student.memorizationProgress.find(
-          m => m.id === row.memorization_progress.id
+          m => m.id === row.memorization_progress!.id
         );
         if (!existing) {
           student.memorizationProgress.push(row.memorization_progress);
@@ -597,16 +622,22 @@ export class DatabaseStorage implements IStorage {
 
   // Memorization Progress operations
   async getMemorizationProgress(studentId: string, week?: number): Promise<MemorizationProgress[]> {
-    let query = db
-      .select()
-      .from(memorizationProgress)
-      .where(eq(memorizationProgress.studentId, studentId));
-    
     if (week) {
-      query = query.where(eq(memorizationProgress.week, week));
+      return await db
+        .select()
+        .from(memorizationProgress)
+        .where(and(
+          eq(memorizationProgress.studentId, studentId),
+          eq(memorizationProgress.week, week)
+        ))
+        .orderBy(desc(memorizationProgress.week));
     }
     
-    return await query.orderBy(desc(memorizationProgress.week));
+    return await db
+      .select()
+      .from(memorizationProgress)
+      .where(eq(memorizationProgress.studentId, studentId))
+      .orderBy(desc(memorizationProgress.week));
   }
 
   async createMemorizationProgress(progressData: InsertMemorizationProgress): Promise<MemorizationProgress> {
