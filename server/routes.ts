@@ -22,8 +22,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   }));
 
-  // Health check endpoint for deployment
-  app.get('/', (req, res) => {
+  // Health check endpoint for deployment (moved to /health to avoid interfering with frontend)
+  app.get('/health', (req, res) => {
     res.json({ 
       status: 'healthy', 
       message: 'Islamic School Management System is running',
