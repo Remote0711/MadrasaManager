@@ -182,8 +182,8 @@ async function seedDemoData() {
     // 7. Create curriculum items
     console.log('Creating curriculum items...');
     const curriculumData = [
-      { name: 'Elif-Cüz' },
-      { name: 'Temel Bilgiler' }
+      { title: 'Elif-Cüz' },
+      { title: 'Temel Bilgiler' }
     ];
 
     const createdCurriculumItems = [];
@@ -191,22 +191,22 @@ async function seedDemoData() {
       // Check if curriculum item already exists
       const [existingItem] = await db.select()
         .from(curriculumItems)
-        .where(eq(curriculumItems.name, curriculumInfo.name));
+        .where(eq(curriculumItems.title, curriculumInfo.title));
 
       if (existingItem) {
         createdCurriculumItems.push(existingItem);
-        console.log(`✅ Curriculum Item (existing): ${existingItem.name} (ID: ${existingItem.id})`);
+        console.log(`✅ Curriculum Item (existing): ${existingItem.title} (ID: ${existingItem.id})`);
         continue;
       }
 
       const [curriculumItem] = await db.insert(curriculumItems)
         .values({
-          name: curriculumInfo.name
+          title: curriculumInfo.title
         })
         .returning();
 
       createdCurriculumItems.push(curriculumItem);
-      console.log(`✅ Curriculum Item: ${curriculumItem.name} (ID: ${curriculumItem.id})`);
+      console.log(`✅ Curriculum Item: ${curriculumItem.title} (ID: ${curriculumItem.id})`);
     }
 
     // 8. Create schedule patterns for Saturday and Sunday
@@ -265,7 +265,7 @@ async function seedDemoData() {
     console.log(`- Parent User ID: ${parentUser.id}, Parent ID: ${parent.id}`);
     console.log(`- Class ID: ${classId}`);
     console.log(`- Students: ${createdStudents.map(s => `${s.firstName} (${s.id})`).join(', ')}`);
-    console.log(`- Curriculum Items: ${createdCurriculumItems.map(c => `${c.name} (${c.id})`).join(', ')}`);
+    console.log(`- Curriculum Items: ${createdCurriculumItems.map(c => `${c.title} (${c.id})`).join(', ')}`);
     console.log(`- Schedule Patterns: ${createdSchedulePatterns.map(sp => sp.id).join(', ')}`);
     
     console.log('\n🔑 Login credentials:');
