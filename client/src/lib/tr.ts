@@ -193,7 +193,6 @@ export const tr = {
   teacherRegistration: "Öğretmen Kayıt",
   teacherMonitoring: "Öğretmen Takip",
   teacherAttendance: "Öğretmen Devamı",
-  arrivalTime: "Geliş Saati",
   attendanceStatus: "Devam Durumu",
   sessionNotes: "Ders Notları",
   

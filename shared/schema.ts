@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, timestamp, date, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, boolean, timestamp, date, pgEnum, index } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -8,6 +8,10 @@ export const roleEnum = pgEnum('role', ['ADMIN', 'TEACHER', 'PARENT']);
 export const attendanceStatusEnum = pgEnum('attendance_status', ['geldi', 'gelmedi', 'mazeretli', 'gec_geldi', 'erken_cikti']);
 export const subjectTypeEnum = pgEnum('subject_type', ['temel_bilgiler', 'kuran', 'ezber']);
 export const behaviorTypeEnum = pgEnum('behavior_type', ['cok_dikkatli', 'dikkatli', 'orta', 'dikkatsiz', 'cok_dikkatsiz']);
+
+// New enums for timetable system
+export const appSessionStatusEnum = pgEnum('app_session_status', ['PLANNED', 'HELD', 'CANCELLED', 'SUBSTITUTED']);
+export const appAttendanceStatusEnum = pgEnum('app_attendance_status', ['PRESENT', 'ABSENT', 'EXCUSED', 'LATE']);
 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -185,6 +189,68 @@ export const memorizationProgress = pgTable("memorization_progress", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// New timetable tables
+export const schedulePatterns = pgTable("schedule_patterns", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  classId: varchar("class_id").references(() => classes.id, { onDelete: "cascade" }).notNull(),
+  teacherId: varchar("teacher_id").references(() => users.id, { onDelete: "set null" }),
+  weekday: integer("weekday").notNull(), // 0-6 (Sunday-Saturday)
+  startTimeMin: integer("start_time_min").notNull(), // minutes from midnight
+  durationMin: integer("duration_min").notNull(), // duration in minutes
+  location: varchar("location", { length: 255 }),
+  rrule: text("rrule"), // optional recurrence rule
+  exceptions: text("exceptions"), // JSON string for exceptions
+  active: boolean("active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const plannedSessions = pgTable("planned_sessions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  classId: varchar("class_id").references(() => classes.id).notNull(),
+  teacherId: varchar("teacher_id").references(() => users.id).notNull(),
+  startsAt: timestamp("starts_at").notNull(),
+  endsAt: timestamp("ends_at").notNull(),
+  curriculumItemId: varchar("curriculum_item_id").references(() => curriculumItems.id),
+  status: appSessionStatusEnum("status").default('PLANNED').notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  classStartsAtIdx: index("planned_sessions_class_starts_at_idx").on(table.classId, table.startsAt)
+}));
+
+export const realizedSessions = pgTable("realized_sessions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  plannedId: varchar("planned_id").references(() => plannedSessions.id),
+  classId: varchar("class_id").references(() => classes.id).notNull(),
+  teacherId: varchar("teacher_id").references(() => users.id).notNull(),
+  startsAt: timestamp("starts_at").notNull(),
+  endsAt: timestamp("ends_at").notNull(),
+  status: appSessionStatusEnum("status").default('HELD').notNull(),
+  progressPct: integer("progress_pct"), // 0-100
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  classStartsAtIdx: index("realized_sessions_class_starts_at_idx").on(table.classId, table.startsAt)
+}));
+
+export const substitutions = pgTable("substitutions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").references(() => realizedSessions.id, { onDelete: "cascade" }).notNull(),
+  substituteTeacherId: varchar("substitute_teacher_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  reason: text("reason"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const sessionAttendance = pgTable("session_attendance", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").references(() => realizedSessions.id, { onDelete: "cascade" }).notNull(),
+  studentId: varchar("student_id").references(() => students.id, { onDelete: "cascade" }).notNull(),
+  status: appAttendanceStatusEnum("status").notNull(),
+  reason: text("reason"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  sessionStudentIdx: index("session_attendance_session_student_idx").on(table.sessionId, table.studentId)
+}));
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   parents: many(parents),
@@ -333,6 +399,73 @@ export const memorizationProgressRelations = relations(memorizationProgress, ({ 
   }),
 }));
 
+// Timetable relations
+export const schedulePatternsRelations = relations(schedulePatterns, ({ one }) => ({
+  class: one(classes, {
+    fields: [schedulePatterns.classId],
+    references: [classes.id],
+  }),
+  teacher: one(users, {
+    fields: [schedulePatterns.teacherId],
+    references: [users.id],
+  }),
+}));
+
+export const plannedSessionsRelations = relations(plannedSessions, ({ one, many }) => ({
+  class: one(classes, {
+    fields: [plannedSessions.classId],
+    references: [classes.id],
+  }),
+  teacher: one(users, {
+    fields: [plannedSessions.teacherId],
+    references: [users.id],
+  }),
+  curriculumItem: one(curriculumItems, {
+    fields: [plannedSessions.curriculumItemId],
+    references: [curriculumItems.id],
+  }),
+  realizedSessions: many(realizedSessions),
+}));
+
+export const realizedSessionsRelations = relations(realizedSessions, ({ one, many }) => ({
+  plannedSession: one(plannedSessions, {
+    fields: [realizedSessions.plannedId],
+    references: [plannedSessions.id],
+  }),
+  class: one(classes, {
+    fields: [realizedSessions.classId],
+    references: [classes.id],
+  }),
+  teacher: one(users, {
+    fields: [realizedSessions.teacherId],
+    references: [users.id],
+  }),
+  substitutions: many(substitutions),
+  attendance: many(sessionAttendance),
+}));
+
+export const substitutionsRelations = relations(substitutions, ({ one }) => ({
+  session: one(realizedSessions, {
+    fields: [substitutions.sessionId],
+    references: [realizedSessions.id],
+  }),
+  substituteTeacher: one(users, {
+    fields: [substitutions.substituteTeacherId],
+    references: [users.id],
+  }),
+}));
+
+export const sessionAttendanceRelations = relations(sessionAttendance, ({ one }) => ({
+  session: one(realizedSessions, {
+    fields: [sessionAttendance.sessionId],
+    references: [realizedSessions.id],
+  }),
+  student: one(students, {
+    fields: [sessionAttendance.studentId],
+    references: [students.id],
+  }),
+}));
+
 
 
 // Insert schemas
@@ -421,6 +554,32 @@ export const insertMemorizationProgressSchema = createInsertSchema(memorizationP
   updatedAt: true,
 });
 
+// Timetable insert schemas
+export const insertSchedulePatternSchema = createInsertSchema(schedulePatterns).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertPlannedSessionSchema = createInsertSchema(plannedSessions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertRealizedSessionSchema = createInsertSchema(realizedSessions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertSubstitutionSchema = createInsertSchema(substitutions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertSessionAttendanceSchema = createInsertSchema(sessionAttendance).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -464,6 +623,18 @@ export type InsertStudentSubjectEnrollment = z.infer<typeof insertStudentSubject
 
 export type MemorizationProgress = typeof memorizationProgress.$inferSelect;
 export type InsertMemorizationProgress = z.infer<typeof insertMemorizationProgressSchema>;
+
+// Timetable types
+export type SchedulePattern = typeof schedulePatterns.$inferSelect;
+export type InsertSchedulePattern = z.infer<typeof insertSchedulePatternSchema>;
+export type PlannedSession = typeof plannedSessions.$inferSelect;
+export type InsertPlannedSession = z.infer<typeof insertPlannedSessionSchema>;
+export type RealizedSession = typeof realizedSessions.$inferSelect;
+export type InsertRealizedSession = z.infer<typeof insertRealizedSessionSchema>;
+export type Substitution = typeof substitutions.$inferSelect;
+export type InsertSubstitution = z.infer<typeof insertSubstitutionSchema>;
+export type SessionAttendance = typeof sessionAttendance.$inferSelect;
+export type InsertSessionAttendance = z.infer<typeof insertSessionAttendanceSchema>;
 
 // Extended types for UI
 export type StudentWithClass = Student & {

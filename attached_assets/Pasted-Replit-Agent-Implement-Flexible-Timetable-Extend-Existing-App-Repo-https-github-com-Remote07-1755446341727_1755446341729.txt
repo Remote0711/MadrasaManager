@@ -1,0 +1,237 @@
+Replit Agent — Implement Flexible Timetable (Extend Existing App)
+
+Repo: https://github.com/Remote0711/MadrasaManager
+Timezone: Europe/Berlin
+Roles: ADMIN, TEACHER, PARENT
+Goal: Add a flexible weekly timetable system (patterns → generated sessions → realized sessions + attendance + substitutions) with a clean UI. All teachers must see the same plan to support substitutions.
+
+Guardrails
+
+Additive only. No destructive drops/renames of existing data. If a name/type conflicts, pick new names (e.g., app_session_status, app_attendance_status) and explain the small deviation in the PR/commit message.
+
+Respect existing IDs (some tables use UUID, others integer). Match FK types accordingly.
+
+Keep strings/labels ready for TR/DE (TR default).
+
+Pass lint/typecheck.
+
+Minimal DB additions (Drizzle/Postgres)
+
+Create new enums/tables if not present, using names that won’t collide:
+
+Enums
+
+app_session_status: PLANNED, HELD, CANCELLED, SUBSTITUTED
+
+app_attendance_status: PRESENT, ABSENT, EXCUSED, LATE
+
+Tables
+
+schedule_patterns
+
+id (serial or uuid) PK
+
+class_id FK → classes(id) (ON DELETE CASCADE; type must match classes.id)
+
+teacher_id FK → teachers(id) (ON DELETE SET NULL)
+
+weekday int (0–6)
+
+start_time_min int, duration_min int
+
+location varchar(255) NULL
+
+rrule text NULL (optional)
+
+exceptions json NULL
+
+active boolean default true
+
+created_at timestamp default now()
+
+planned_sessions
+
+id (serial/uuid) PK
+
+class_id FK → classes(id)
+
+teacher_id FK → teachers(id)
+
+starts_at timestamp, ends_at timestamp (not null)
+
+curriculum_item_id FK → curriculum_items(id) NULL
+
+status app_session_status default PLANNED
+
+created_at timestamp default now()
+
+index (class_id, starts_at)
+
+realized_sessions
+
+id (serial/uuid) PK
+
+planned_id FK → planned_sessions(id) NULL
+
+class_id FK → classes(id)
+
+teacher_id FK → teachers(id)
+
+starts_at, ends_at timestamp not null
+
+status app_session_status default HELD
+
+progress_pct int NULL (0–100), notes text NULL
+
+created_at timestamp default now()
+
+index (class_id, starts_at)
+
+substitutions
+
+id (serial/uuid) PK
+
+session_id FK → realized_sessions(id) ON DELETE CASCADE
+
+substitute_teacher_id FK → teachers(id) ON DELETE CASCADE
+
+reason text NULL
+
+created_at timestamp default now()
+
+attendance
+
+id (serial/uuid) PK
+
+session_id FK → realized_sessions(id) ON DELETE CASCADE
+
+student_id FK → students(id) ON DELETE CASCADE
+
+status app_attendance_status not null
+
+reason text NULL
+
+created_at timestamp default now()
+
+unique (session_id, student_id)
+
+If any target FK uses uuid (e.g., classes.id), make the referencing column uuid too. Do not coerce types.
+
+Done when: migrations are generated & applied additively (no drops), and tables/enums are present with indexes.
+
+Server API (Express)
+
+Add under /api/schedule (use zod/joi validation & role guards):
+
+GET /patterns?classId=&teacherId=&active=&weekday= — list/filter.
+
+POST /patterns — create pattern.
+
+PATCH /patterns/:id — update/enable/disable.
+
+Materialization: POST /generate with { from: ISODate, to: ISODate }
+
+Expand active patterns into planned_sessions in the given range (Europe/Berlin).
+
+No duplicates (idempotent).
+
+GET /planned?classId=&teacherId=&from=&to=&page=&limit= — list planned sessions.
+
+POST /realize — create a realized_session (link to planned_id when present).
+Body: { plannedId?, classId, teacherId?, startsAt, endsAt, status?, progressPct?, notes? }
+
+POST /substitutions — { sessionId, substituteTeacherId, reason? }
+
+GET /attendance?sessionId= — list current attendance.
+
+POST /attendance — batch upsert [{ sessionId, studentId, status, reason? }].
+
+GET /conflicts?classId=&teacherId=&from=&to= — detect overlaps for class/teacher/location.
+
+GET /ical?classId=&from=&to= — iCal export for planned/realized sessions (TZ Europe/Berlin).
+
+Done when: endpoints return correct JSON, 401/403 enforced, and minimal integration tests pass (smoke).
+
+Frontend (React)
+
+Add/extend pages (use existing design system: Tailwind + shadcn/ui; keep it lightweight):
+
+Admin → Schedule
+
+Tabs: Week, Patterns, Conflicts.
+
+Week View:
+
+Grid (columns = weekdays, rows = time slots).
+
+Drag & Drop (e.g., dnd-kit) to move/copy sessions within the week.
+
+Color badges: class, teacher, status.
+
+Tooltips: location, curriculum item, teacher.
+
+Quick actions: Realize, Cancel, Substitute.
+
+Patterns View: CRUD for schedule_patterns (weekday, start, duration, teacher, class, location, active).
+
+Conflicts View: list overlapping sessions with filters.
+
+Teacher → Schedule (shared view)
+
+All classes visible (so teachers can substitute).
+
+“I substitute” action → opens substitution dialog.
+
+Attendance sheet inline per realized session (toggle PRESENT/ABSENT/EXCUSED/LATE).
+
+Parent → Read-only view for their child’s upcoming sessions + attendance history.
+
+Done when:
+
+Admin can create patterns, generate a week, review conflicts.
+
+Teachers see unified schedule, can mark attendance and substitutions.
+
+Mobile-friendly layout; keyboard-accessible; visually clean.
+
+Seed / Demo
+
+Extend the existing seed (non-destructive, idempotent):
+
+Ensure 1 class (e.g., T1-A), 1 teacher, ~6 students, 2 curriculum items.
+
+Ensure 2 weekly patterns (Sat/Sun 10:00, 60 min).
+
+Provide a simple call to /api/schedule/generate?from=<next Monday>&to=<+2 weeks> during seed or a small dev script.
+
+Deliverables
+
+Drizzle migration(s) (additive) for enums/tables/indexes.
+
+API routes + minimal tests.
+
+React pages/components for Week/Patterns/Conflicts + Teacher view + Attendance sheet.
+
+iCal export endpoint.
+
+Update README with a “Schedule Quickstart”: how to add a pattern, generate a week, mark attendance, iCal URL.
+
+Commit messages like:
+
+feat(db): timetable patterns/sessions/substitutions/attendance
+
+feat(api): schedule endpoints (patterns, generate, planned, realize, attendance, conflicts, ical)
+
+feat(ui): week view + patterns editor + conflicts
+
+chore(seed): demo data for schedule
+
+Acceptance
+
+No destructive schema changes; type-safe FKs; all checks green.
+
+End-to-end flow works: create pattern → generate week → realize session → mark attendance → see in UI → export iCal.
+
+All teachers see the same schedule (shared view) to enable substitution.
+
+Please implement step-by-step. If you encounter any schema conflicts (enum/type), pick new names and proceed (don’t drop).
