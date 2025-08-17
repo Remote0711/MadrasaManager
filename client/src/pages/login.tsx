@@ -125,9 +125,9 @@ export default function Login() {
           <div className="mt-6 text-center p-4 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-lg border border-primary/10">
             <p className="text-sm font-medium text-primary mb-2">{tr.demoCredentials}</p>
             <div className="space-y-1 text-sm text-muted-foreground">
-              <p><span className="font-medium">Admin:</span> admin / 123456</p>
-              <p><span className="font-medium">Öğretmen:</span> ogretmen / 123456</p>
-              <p><span className="font-medium">Veli:</span> veli / 123456</p>
+              <p><span className="font-medium">Admin:</span> admin@example.com / password123</p>
+              <p><span className="font-medium">Öğretmen:</span> teacher@example.com / password123</p>
+              <p><span className="font-medium">Veli:</span> parent@example.com / password123</p>
             </div>
           </div>
         </CardContent>

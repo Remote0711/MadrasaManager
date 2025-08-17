@@ -5,11 +5,11 @@ import { queryClient } from "@/lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-import Login from "@/pages/login.tsx";
-import AdminDashboard from "@/pages/dashboard/admin.tsx";
-import TeacherDashboard from "@/pages/dashboard/teacher.tsx";
-import ParentDashboard from "@/pages/dashboard/parent.tsx";
-import ProtectedRoute from "@/components/ProtectedRoute.tsx";
+import Login from "@/pages/login";
+import AdminDashboard from "@/pages/dashboard/admin";
+import TeacherDashboard from "@/pages/dashboard/teacher";
+import ParentDashboard from "@/pages/dashboard/parent";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 function AppContent() {
   const { data: auth, isLoading } = useQuery({
