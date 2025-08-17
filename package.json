@@ -20,7 +20,12 @@
     "typescript": "^5.5.4"
   },
   "dependencies": {
+    "@replit/vite-plugin-cartographer": "^0.2.8",
+    "@replit/vite-plugin-runtime-error-modal": "^0.0.3",
+    "@vitejs/plugin-react": "^4.3.2",
     "argon2": "^0.44.0",
-    "ts-node": "^10.9.2"
+    "ts-node": "^10.9.2",
+    "tsx": "^4.20.4",
+    "vite": "^5.4.19"
   }
 }
