@@ -179,35 +179,34 @@ async function seedDemoData() {
       console.log(`✅ Linked student ${student.firstName} to parent ${parentUser.name}`);
     }
 
-    // 7. Create curriculum items
-    console.log('Creating curriculum items...');
-    const curriculumData = [
-      { title: 'Elif-Cüz' },
-      { title: 'Temel Bilgiler' }
+    // 7. Creating curriculum items (safe/minimal)
+    console.log("Creating curriculum items...");
+    const itemsToEnsure = [
+      { title: "Elif-Cüz",        description: "", weekNumber: 1, isOptional: false },
+      { title: "Temel Bilgiler",  description: "", weekNumber: 1, isOptional: false },
     ];
 
     const createdCurriculumItems = [];
-    for (const curriculumInfo of curriculumData) {
-      // Check if curriculum item already exists
-      const [existingItem] = await db.select()
-        .from(curriculumItems)
-        .where(eq(curriculumItems.title, curriculumInfo.title));
-
-      if (existingItem) {
-        createdCurriculumItems.push(existingItem);
-        console.log(`✅ Curriculum Item (existing): ${existingItem.title} (ID: ${existingItem.id})`);
-        continue;
+    for (const it of itemsToEnsure) {
+      // check if exists by title
+      const existing = await db.query.curriculumItems.findFirst({
+        where: (t, { eq }) => eq(t.title, it.title),
+      });
+      if (!existing) {
+        const [inserted] = await db.insert(curriculumItems).values({
+          // do NOT set id; let DB handle it
+          title: it.title,
+          description: it.description,
+          weekNumber: it.weekNumber,
+          isOptional: it.isOptional,
+          // intentionally NOT setting: subject, programTypeId, classLevel, "order"
+        }).returning();
+        createdCurriculumItems.push(inserted);
+      } else {
+        createdCurriculumItems.push(existing);
       }
-
-      const [curriculumItem] = await db.insert(curriculumItems)
-        .values({
-          title: curriculumInfo.title
-        })
-        .returning();
-
-      createdCurriculumItems.push(curriculumItem);
-      console.log(`✅ Curriculum Item: ${curriculumItem.title} (ID: ${curriculumItem.id})`);
     }
+    console.log("✓ Curriculum items ensured");
 
     // 8. Create schedule patterns for Saturday and Sunday
     console.log('Creating schedule patterns...');
