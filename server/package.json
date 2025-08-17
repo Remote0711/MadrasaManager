@@ -11,7 +11,8 @@
     "lint": "echo 'No linter configured'",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "seed": "tsx src/seed.ts"
   },
   "dependencies": {
     "@jridgewell/trace-mapping": "^0.3.25",
@@ -43,7 +44,9 @@
     "@types/pg": "^8.11.10",
     "esbuild": "^0.25.0",
     "tsx": "^4.19.1",
-    "drizzle-kit": "^0.30.4"
+    "drizzle-kit": "^0.30.4",
+    "ts-node": "^10.9.2",
+    "argon2": "^0.40.3"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8"

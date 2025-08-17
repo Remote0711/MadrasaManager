@@ -18,5 +18,9 @@
     "@types/node": "20.16.11",
     "drizzle-kit": "^0.30.4",
     "typescript": "^5.5.4"
+  },
+  "dependencies": {
+    "argon2": "^0.44.0",
+    "ts-node": "^10.9.2"
   }
 }
