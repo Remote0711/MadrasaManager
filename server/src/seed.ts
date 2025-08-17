@@ -10,7 +10,8 @@ import {
   curriculumItems, 
   schedulePatterns 
 } from './db/schema.js';
-import { eq } from 'drizzle-orm';
+import {eq } from 'drizzle-orm';
+import { sql } from "drizzle-orm";
 import * as argon2 from 'argon2';
 
 async function getOrCreateClassId(name: string, programType = "Haftasonu"): Promise<number> {
@@ -186,13 +187,14 @@ async function seedDemoData() {
       { title: "Temel Bilgiler",  description: "", weekNumber: 1, isOptional: false },
     ];
 
-    const createdCurriculumItems = [];
+    const createdCurriculumItems: any[] = [];
     for (const it of itemsToEnsure) {
-      // check if exists by title
-      const existing = await db.query.curriculumItems.findFirst({
-        where: (t, { eq }) => eq(t.title, it.title),
-      });
-      if (!existing) {
+      // check if item with this title already exists
+      const existsRes = await db.execute(
+        sql`select 1 from "curriculum_items" where "title" = ${it.title} limit 1`
+      );
+
+      if (existsRes.length === 0) {
         const [inserted] = await db.insert(curriculumItems).values({
           // do NOT set id; let DB handle it
           title: it.title,
@@ -201,12 +203,13 @@ async function seedDemoData() {
           isOptional: it.isOptional,
           // intentionally NOT setting: subject, programTypeId, classLevel, "order"
         }).returning();
+
         createdCurriculumItems.push(inserted);
-      } else {
-        createdCurriculumItems.push(existing);
       }
     }
-    console.log("✓ Curriculum items ensured");
+    console.log("✅ Curriculum items ensured:", createdCurriculumItems.length);
+
+  
 
     // 8. Create schedule patterns for Saturday and Sunday
     console.log('Creating schedule patterns...');
