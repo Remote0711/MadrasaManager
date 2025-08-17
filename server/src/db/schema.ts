@@ -3,8 +3,8 @@ import { pgTable, serial, varchar, text, integer, timestamp, pgEnum, primaryKey 
 import { relations } from "drizzle-orm";
 
 // --- Enums ---
-export const roleEnum = pgEnum("role", ["ADMIN", "TEACHER", "PARENT"]);
-export const genderEnum = pgEnum("gender", ["MALE", "FEMALE"]);
+export const roleEnum = pgEnum("app_role", ["ADMIN", "TEACHER", "PARENT"]);
+export const genderEnum = pgEnum("app_gender", ["MALE", "FEMALE"]);
 
 // --- Users (Admins/Teachers/Parents share this) ---
 export const users = pgTable("users", {
