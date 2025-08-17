@@ -4,6 +4,33 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Ensure all custom classes are included */
+@layer components {
+  .bg-background {
+    background-color: hsl(48, 100%, 98%);
+  }
+  
+  .text-foreground {
+    color: hsl(24, 24%, 15%);
+  }
+  
+  .border-primary {
+    border-color: hsl(171, 100%, 30%);
+  }
+  
+  .border-secondary {
+    border-color: hsl(39, 77%, 70%);
+  }
+  
+  .bg-primary {
+    background-color: hsl(171, 100%, 30%);
+  }
+  
+  .text-primary {
+    color: hsl(171, 100%, 30%);
+  }
+}
+
 :root {
   /* Islamic-inspired warm cream and teal palette */
   --background: hsl(48, 100%, 98%);

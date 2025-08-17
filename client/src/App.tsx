@@ -31,52 +31,52 @@ function AppContent() {
   return (
     <Switch>
       <Route path="/login">
-        {auth?.user ? (
-          <Redirect to={`/dashboard/${auth.user.role.toLowerCase()}`} />
+        {(auth as any)?.user ? (
+          <Redirect to={`/dashboard/${(auth as any).user.role.toLowerCase()}`} />
         ) : (
           <Login />
         )}
       </Route>
 
       <Route path="/dashboard/admin/:rest*">
-        <ProtectedRoute allowedRoles={['ADMIN']} user={auth?.user}>
+        <ProtectedRoute allowedRoles={['ADMIN']} user={(auth as any)?.user}>
           <AdminDashboard />
         </ProtectedRoute>
       </Route>
       
       <Route path="/dashboard/admin">
-        <ProtectedRoute allowedRoles={['ADMIN']} user={auth?.user}>
+        <ProtectedRoute allowedRoles={['ADMIN']} user={(auth as any)?.user}>
           <AdminDashboard />
         </ProtectedRoute>
       </Route>
 
       <Route path="/dashboard/teacher/:rest*">
-        <ProtectedRoute allowedRoles={['TEACHER']} user={auth?.user}>
+        <ProtectedRoute allowedRoles={['TEACHER']} user={(auth as any)?.user}>
           <TeacherDashboard />
         </ProtectedRoute>
       </Route>
       
       <Route path="/dashboard/teacher">
-        <ProtectedRoute allowedRoles={['TEACHER']} user={auth?.user}>
+        <ProtectedRoute allowedRoles={['TEACHER']} user={(auth as any)?.user}>
           <TeacherDashboard />
         </ProtectedRoute>
       </Route>
 
       <Route path="/dashboard/parent/:rest*">
-        <ProtectedRoute allowedRoles={['PARENT']} user={auth?.user}>
+        <ProtectedRoute allowedRoles={['PARENT']} user={(auth as any)?.user}>
           <ParentDashboard />
         </ProtectedRoute>
       </Route>
       
       <Route path="/dashboard/parent">
-        <ProtectedRoute allowedRoles={['PARENT']} user={auth?.user}>
+        <ProtectedRoute allowedRoles={['PARENT']} user={(auth as any)?.user}>
           <ParentDashboard />
         </ProtectedRoute>
       </Route>
 
       <Route path="/">
-        {auth?.user ? (
-          <Redirect to={`/dashboard/${auth.user.role.toLowerCase()}`} />
+        {(auth as any)?.user ? (
+          <Redirect to={`/dashboard/${(auth as any).user.role.toLowerCase()}`} />
         ) : (
           <Redirect to="/login" />
         )}
