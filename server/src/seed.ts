@@ -18,7 +18,7 @@ async function getOrCreateClassByName(name: string, programType?: string) {
   const [existingClass] = await db.select().from(classes).where(eq(classes.name, name));
   
   if (existingClass) {
-    return { id: existingClass.id };
+    return { id: existingClass.id }; // id is number
   }
 
   // Create new class if not found
@@ -27,9 +27,9 @@ async function getOrCreateClassByName(name: string, programType?: string) {
       name,
       // Note: programType column doesn't exist in current schema, but keeping param for future use
     })
-    .returning();
+    .returning({ id: classes.id });
 
-  return { id: newClass.id };
+  return { id: newClass.id }; // number
 }
 
 async function seedDemoData() {
@@ -131,8 +131,8 @@ async function seedDemoData() {
 
     // 4. Create or get class using helper function
     console.log('Creating class...');
-    const classResult = await getOrCreateClassByName('T1-A', 'Haftasonu');
-    const classId = classResult.id;
+    const klass = await getOrCreateClassByName('T1-A', 'Haftasonu');
+    const classId = klass.id; // This is now guaranteed to be a number
 
     console.log(`✅ Class: T1-A (ID: ${classId})`);
 
