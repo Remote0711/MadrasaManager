@@ -1,0 +1,77 @@
+TASK migrate-setup-robust
+Goal: Make Drizzle migrations apply successfully against the Neon DB set in server/.env — even if enum types already exist.
+
+Do exactly this:
+
+Replace server/drizzle.config.ts with:
+
+import 'dotenv/config';
+import { defineConfig } from 'drizzle-kit';
+export default defineConfig({
+  schema: './src/db/schema.ts',
+  out: './drizzle',             // write migrations into server/drizzle
+  dialect: 'postgresql',
+  dbCredentials: { url: process.env.DATABASE_URL! },
+});
+
+
+Ensure folder server/drizzle/ exists (mkdir -p server/drizzle).
+
+Run: npm -w server run db:generate
+
+Show listing: ls -la server/drizzle (should contain 0000_*.sql and a meta/ dir).
+
+Try migrate: npm -w server run db:migrate
+
+If migrate fails with messages like type "role" already exists or type "gender" already exists, then:
+
+Create server/scripts/db-clean.js with:
+
+// Cleanup script to drop conflicting tables/enums before re-running migrations
+require('dotenv').config({ path: 'server/.env' });
+const { Client } = require('pg');
+(async () => {
+  const c = new Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
+  await c.connect();
+  const dbname = (await c.query('select current_database() as d')).rows[0].d;
+  console.log('Cleaning DB:', dbname);
+  await c.query('DROP TABLE IF EXISTS student_parents, students, parents, teachers, users, "__drizzle_migrations" CASCADE;');
+  await c.query('DROP TYPE IF EXISTS "role" CASCADE;');
+  await c.query('DROP TYPE IF EXISTS "gender" CASCADE;');
+  console.log('Cleanup OK');
+  await c.end();
+})().catch(e => { console.error(e); process.exit(1); });
+
+
+Run: node server/scripts/db-clean.js
+
+Then run migrate again: npm -w server run db:migrate
+
+If there are still enum name collisions, modify server/src/db/schema.ts to rename enums to avoid old types (no functional change):
+
+Change
+
+export const roleEnum = pgEnum("role", ["ADMIN","TEACHER","PARENT"]);
+export const genderEnum = pgEnum("gender", ["MALE","FEMALE"]);
+
+
+to
+
+export const roleEnum = pgEnum("app_role", ["ADMIN","TEACHER","PARENT"]);
+export const genderEnum = pgEnum("app_gender", ["MALE","FEMALE"]);
+
+
+Regenerate & migrate:
+
+npm -w server run db:generate
+
+npm -w server run db:migrate
+
+Definition of Done:
+
+server/drizzle/ contains migration files.
+
+npm -w server run db:migrate applies successfully (prints “applying migrations…”).
+
+Commit message:
+chore(db): configure drizzle out dir, add robust cleanup, and apply initial migration
