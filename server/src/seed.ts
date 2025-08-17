@@ -13,23 +13,16 @@ import {
 import { eq } from 'drizzle-orm';
 import * as argon2 from 'argon2';
 
-async function getOrCreateClassByName(name: string, programType?: string) {
-  // Try to find existing class by name
-  const [existingClass] = await db.select().from(classes).where(eq(classes.name, name));
-  
-  if (existingClass) {
-    return { id: existingClass.id }; // id is number
-  }
-
-  // Create new class if not found
-  const [newClass] = await db.insert(classes)
-    .values({
-      name,
-      // Note: programType column doesn't exist in current schema, but keeping param for future use
-    })
+async function getOrCreateClassId(name: string, programType = "Haftasonu"): Promise<number> {
+  const found = await db.query.classes.findFirst({ where: (c, { eq }) => eq(c.name, name) });
+  if (found?.id) return found.id as number; // ensure number
+  const inserted = await db.insert(classes)
+    .values({ name })              // do NOT set id, programType not in schema
+    .onConflictDoNothing()
     .returning({ id: classes.id });
-
-  return { id: newClass.id }; // number
+  if (inserted[0]?.id) return inserted[0].id as number;
+  const again = await db.query.classes.findFirst({ where: (c, { eq }) => eq(c.name, name) });
+  return again!.id as number;
 }
 
 async function seedDemoData() {
@@ -131,9 +124,7 @@ async function seedDemoData() {
 
     // 4. Create or get class using helper function
     console.log('Creating class...');
-    const klass = await getOrCreateClassByName('T1-A', 'Haftasonu');
-    const classId = klass.id; // This is now guaranteed to be a number
-
+    const classId = await getOrCreateClassId('T1-A', 'Haftasonu'); // <-- number
     console.log(`✅ Class: T1-A (ID: ${classId})`);
 
     // 5. Create 3 students
