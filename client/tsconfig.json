@@ -3,10 +3,12 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "lib": ["DOM", "ES2022"],
+    "strict": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
-    "strict": true
+    "baseUrl": ".",
+    "paths": { "@/*": ["src/*"] }
   },
-  "include": ["src", "index.html", "src/vite-env.d.ts"]
+  "include": ["src/main.tsx", "src/App.tsx", "src/vite-env.d.ts"]
 }
