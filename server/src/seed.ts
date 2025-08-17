@@ -13,6 +13,25 @@ import {
 import { eq } from 'drizzle-orm';
 import * as argon2 from 'argon2';
 
+async function getOrCreateClassByName(name: string, programType?: string) {
+  // Try to find existing class by name
+  const [existingClass] = await db.select().from(classes).where(eq(classes.name, name));
+  
+  if (existingClass) {
+    return { id: existingClass.id };
+  }
+
+  // Create new class if not found
+  const [newClass] = await db.insert(classes)
+    .values({
+      name,
+      // Note: programType column doesn't exist in current schema, but keeping param for future use
+    })
+    .returning();
+
+  return { id: newClass.id };
+}
+
 async function seedDemoData() {
   console.log('🌱 Starting seed process...');
 
@@ -110,22 +129,12 @@ async function seedDemoData() {
 
     console.log(`✅ Parent: ${parentUser.name} (User ID: ${parentUser.id}, Parent ID: ${parent.id})`);
 
-    // 4. Create class
+    // 4. Create or get class using helper function
     console.log('Creating class...');
-    const [classRecord] = await db.insert(classes)
-      .values({
-        name: 'T1-A'
-      })
-      .onConflictDoNothing()
-      .returning();
+    const classResult = await getOrCreateClassByName('T1-A', 'Haftasonu');
+    const classId = classResult.id;
 
-    // If class already exists, get it
-    let finalClass = classRecord;
-    if (!classRecord) {
-      [finalClass] = await db.select().from(classes).where(eq(classes.name, 'T1-A'));
-    }
-
-    console.log(`✅ Class: ${finalClass.name} (ID: ${finalClass.id})`);
+    console.log(`✅ Class: T1-A (ID: ${classId})`);
 
     // 5. Create 3 students
     console.log('Creating students...');
@@ -137,6 +146,18 @@ async function seedDemoData() {
 
     const createdStudents = [];
     for (const studentInfo of studentData) {
+      // Check if student already exists
+      const [existingStudent] = await db.select()
+        .from(students)
+        .where(eq(students.firstName, studentInfo.firstName))
+        .where(eq(students.lastName, studentInfo.lastName));
+
+      if (existingStudent) {
+        createdStudents.push(existingStudent);
+        console.log(`✅ Student (existing): ${existingStudent.firstName} ${existingStudent.lastName} (ID: ${existingStudent.id})`);
+        continue;
+      }
+
       const [student] = await db.insert(students)
         .values({
           firstName: studentInfo.firstName,
@@ -145,15 +166,12 @@ async function seedDemoData() {
           organization: 'Demo Teşkilat',
           address: `${studentInfo.firstName} Address`,
           phone: '+49 123 456 7893',
-          classId: finalClass.id
+          classId: classId // Use numeric class ID
         })
-        .onConflictDoNothing()
         .returning();
 
-      if (student) {
-        createdStudents.push(student);
-        console.log(`✅ Student: ${student.firstName} ${student.lastName} (ID: ${student.id})`);
-      }
+      createdStudents.push(student);
+      console.log(`✅ Student: ${student.firstName} ${student.lastName} (ID: ${student.id})`);
     }
 
     // 6. Link all students to the parent
@@ -179,17 +197,25 @@ async function seedDemoData() {
 
     const createdCurriculumItems = [];
     for (const curriculumInfo of curriculumData) {
+      // Check if curriculum item already exists
+      const [existingItem] = await db.select()
+        .from(curriculumItems)
+        .where(eq(curriculumItems.name, curriculumInfo.name));
+
+      if (existingItem) {
+        createdCurriculumItems.push(existingItem);
+        console.log(`✅ Curriculum Item (existing): ${existingItem.name} (ID: ${existingItem.id})`);
+        continue;
+      }
+
       const [curriculumItem] = await db.insert(curriculumItems)
         .values({
           name: curriculumInfo.name
         })
-        .onConflictDoNothing()
         .returning();
 
-      if (curriculumItem) {
-        createdCurriculumItems.push(curriculumItem);
-        console.log(`✅ Curriculum Item: ${curriculumItem.name} (ID: ${curriculumItem.id})`);
-      }
+      createdCurriculumItems.push(curriculumItem);
+      console.log(`✅ Curriculum Item: ${curriculumItem.name} (ID: ${curriculumItem.id})`);
     }
 
     // 8. Create schedule patterns for Saturday and Sunday
@@ -211,9 +237,22 @@ async function seedDemoData() {
 
     const createdSchedulePatterns = [];
     for (const scheduleInfo of scheduleData) {
+      // Check if schedule pattern already exists
+      const [existingPattern] = await db.select()
+        .from(schedulePatterns)
+        .where(eq(schedulePatterns.classId, classId))
+        .where(eq(schedulePatterns.weekday, scheduleInfo.weekday));
+
+      if (existingPattern) {
+        createdSchedulePatterns.push(existingPattern);
+        const dayName = scheduleInfo.weekday === 6 ? 'Saturday' : 'Sunday';
+        console.log(`✅ Schedule Pattern (existing): ${dayName} 10:00-11:00 (ID: ${existingPattern.id})`);
+        continue;
+      }
+
       const [schedulePattern] = await db.insert(schedulePatterns)
         .values({
-          classId: finalClass.id,
+          classId: classId, // Use numeric class ID
           teacherId: teacher.id,
           weekday: scheduleInfo.weekday,
           startTimeMin: scheduleInfo.startTimeMin,
@@ -221,14 +260,11 @@ async function seedDemoData() {
           location: scheduleInfo.location,
           active: true
         })
-        .onConflictDoNothing()
         .returning();
 
-      if (schedulePattern) {
-        createdSchedulePatterns.push(schedulePattern);
-        const dayName = scheduleInfo.weekday === 6 ? 'Saturday' : 'Sunday';
-        console.log(`✅ Schedule Pattern: ${dayName} 10:00-11:00 (ID: ${schedulePattern.id})`);
-      }
+      createdSchedulePatterns.push(schedulePattern);
+      const dayName = scheduleInfo.weekday === 6 ? 'Saturday' : 'Sunday';
+      console.log(`✅ Schedule Pattern: ${dayName} 10:00-11:00 (ID: ${schedulePattern.id})`);
     }
 
     console.log('\n🎉 Seed completed successfully!');
@@ -236,7 +272,7 @@ async function seedDemoData() {
     console.log(`- Admin User ID: ${adminUser.id}`);
     console.log(`- Teacher User ID: ${teacherUser.id}, Teacher ID: ${teacher.id}`);
     console.log(`- Parent User ID: ${parentUser.id}, Parent ID: ${parent.id}`);
-    console.log(`- Class ID: ${finalClass.id}`);
+    console.log(`- Class ID: ${classId}`);
     console.log(`- Students: ${createdStudents.map(s => `${s.firstName} (${s.id})`).join(', ')}`);
     console.log(`- Curriculum Items: ${createdCurriculumItems.map(c => `${c.name} (${c.id})`).join(', ')}`);
     console.log(`- Schedule Patterns: ${createdSchedulePatterns.map(sp => sp.id).join(', ')}`);
