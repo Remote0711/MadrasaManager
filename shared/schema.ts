@@ -14,12 +14,12 @@ export const appSessionStatusEnum = pgEnum('app_session_status', ['PLANNED', 'HE
 export const appAttendanceStatusEnum = pgEnum('app_attendance_status', ['PRESENT', 'ABSENT', 'EXCUSED', 'LATE']);
 
 export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: integer("id").primaryKey().generatedByDefaultAsIdentity(),
   name: text("name").notNull(),
-  username: text("username").notNull().unique(),
+  email: varchar("email").notNull().unique(),
   password: text("password").notNull(),
-  email: text("email"),
-  phone: text("phone"),
+  address: text("address"),
+  phone: varchar("phone"),
   role: roleEnum("role").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -38,11 +38,11 @@ export const classes = pgTable("classes", {
 });
 
 export const students = pgTable("students", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: integer("id").primaryKey().generatedByDefaultAsIdentity(),
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
   dateOfBirth: date("date_of_birth"),
-  parentId: varchar("parent_id").references(() => users.id),
+  parentId: integer("parent_id").references(() => users.id),
   classId: varchar("class_id").references(() => classes.id).notNull(),
   enrollmentDate: timestamp("enrollment_date").defaultNow().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -50,8 +50,8 @@ export const students = pgTable("students", {
 
 export const parents = pgTable("parents", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").references(() => users.id).notNull(),
-  studentId: varchar("student_id").references(() => students.id).notNull(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  studentId: integer("student_id").references(() => students.id).notNull(),
 });
 
 export const lessonPlans = pgTable("lesson_plans", {
@@ -66,7 +66,7 @@ export const lessonPlans = pgTable("lesson_plans", {
 
 export const progress = pgTable("progress", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  studentId: varchar("student_id").references(() => students.id).notNull(),
+  studentId: integer("student_id").references(() => students.id).notNull(),
   week: integer("week").notNull(),
   pagesDone: integer("pages_done").notNull().default(0),
   pagesPlanned: integer("pages_planned").notNull(),
@@ -75,7 +75,7 @@ export const progress = pgTable("progress", {
 
 export const attendance = pgTable("attendance", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  studentId: varchar("student_id").references(() => students.id).notNull(),
+  studentId: integer("student_id").references(() => students.id).notNull(),
   week: integer("week").notNull(),
   status: attendanceStatusEnum("status").notNull(),
   arrivalTime: text("arrival_time"), // HH:MM format for late arrivals

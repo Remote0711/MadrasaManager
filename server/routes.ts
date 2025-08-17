@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import session from 'express-session';
 import { storage } from "./storage";
 import { authenticateUser, hashPassword, requireAuth, requireRole, type AuthUser } from "./auth";
-import { insertUserSchema, insertStudentSchema, insertProgressSchema, insertAttendanceSchema, insertBehaviorSchema, insertLessonPlanSchema, insertTeacherAttendanceSchema, insertTeacherSubjectAssignmentSchema, insertCurriculumItemSchema, insertStudentSubjectEnrollmentSchema, insertMemorizationProgressSchema } from "@shared/schema";
+import { insertUserSchema, insertStudentSchema, insertProgressSchema, insertAttendanceSchema, insertBehaviorSchema, insertLessonPlanSchema, insertTeacherAttendanceSchema, insertTeacherSubjectAssignmentSchema, insertCurriculumItemSchema, insertStudentSubjectEnrollmentSchema, insertMemorizationProgressSchema } from "../shared/schema";
 
 declare module 'express-session' {
   interface SessionData {

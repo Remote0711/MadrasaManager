@@ -1,20 +1,20 @@
-import bcrypt from 'bcrypt';
+import argon2 from 'argon2';
 import { storage } from './storage';
-import type { User } from '@shared/schema';
+import type { User } from '../shared/schema';
 
 export interface AuthUser {
-  id: string;
+  id: number;
   name: string;
-  username: string;
+  email: string;
   role: 'ADMIN' | 'TEACHER' | 'PARENT';
 }
 
 export async function hashPassword(password: string): Promise<string> {
-  return await bcrypt.hash(password, 10);
+  return await argon2.hash(password);
 }
 
 export async function verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
-  return await bcrypt.compare(password, hashedPassword);
+  return await argon2.verify(hashedPassword, password);
 }
 
 export async function authenticateUser(username: string, password: string): Promise<AuthUser | null> {
@@ -31,7 +31,7 @@ export async function authenticateUser(username: string, password: string): Prom
   return {
     id: user.id,
     name: user.name,
-    username: user.username,
+    email: user.email,
     role: user.role,
   };
 }

@@ -12,7 +12,7 @@ import {
   type CurriculumItem, type InsertCurriculumItem, type StudentSubjectEnrollment,
   type InsertStudentSubjectEnrollment, type MemorizationProgress, type InsertMemorizationProgress,
   type TeacherWithAssignments, type StudentWithEnrollments
-} from "@shared/schema";
+} from "../shared/schema";
 import { db } from "./db";
 import { eq, and, desc, sql } from "drizzle-orm";
 
