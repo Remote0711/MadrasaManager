@@ -1,13 +1,14 @@
 
 {
   "extends": "../tsconfig.json",
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"],
   "compilerOptions": {
+    "jsx": "react-jsx",
+    "lib": ["DOM", "ES2022"],
+    "types": ["vite/client"],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "@shared/*": ["../shared/*"]
+      "@/*": ["./src/*"]
     }
-  }
+  },
+  "include": ["src"]
 }
